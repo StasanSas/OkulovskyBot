@@ -1,4 +1,5 @@
 namespace TestProject;
+using OkulovskyBot;
 using System.Text.RegularExpressions;
 
 public class Tests
@@ -12,10 +13,7 @@ public class Tests
     [Test]
     public void TestNameWeightPattern()
     {
-        string pattern = @"^(.)+ [Ww]-?\d+&";
-        Regex regex = new Regex(pattern);
-        string input = "John W-150&";
-        
-        Assert.True(regex.IsMatch(input));
+        var request = "1 w6 : 2 e7\n2 w5 : 1 e1";
+        new InputDataParser().Parse();
     }
 }

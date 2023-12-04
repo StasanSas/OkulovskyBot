@@ -186,27 +186,27 @@ public class NodeVisual
         }
     }
 
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            var observer = new Observer();
-            NodeVisual.observer = observer;
-            
-            List<NodeVisual> graph = new List<NodeVisual>();
-            var a = new NodeVisual(0);
-            var b = new NodeVisual(1);
-            var c = new NodeVisual(3);
-            var d = new NodeVisual(4);
-            var e = new NodeVisual(5);
-            a.Connect(b);
-            a.Connect(e); 
-            b.Connect(c); 
-            b.Connect(d);
-            Algoritms.DFS(a);
-            var z = 0;
-        }
-    }
+    // class Program
+    // {
+    //     static void Main(string[] args)
+    //     {
+    //         var observer = new Observer();
+    //         NodeVisual.observer = observer;
+    //         
+    //         List<NodeVisual> graph = new List<NodeVisual>();
+    //         var a = new NodeVisual(0);
+    //         var b = new NodeVisual(1);
+    //         var c = new NodeVisual(3);
+    //         var d = new NodeVisual(4);
+    //         var e = new NodeVisual(5);
+    //         a.Connect(b);
+    //         a.Connect(e); 
+    //         b.Connect(c); 
+    //         b.Connect(d);
+    //         Algoritms.DFS(a);
+    //         var z = 0;
+    //     }
+    // }
 
     public enum TypeChange
     {

@@ -6,15 +6,14 @@ public class InputDataParser
     
     public void Parse()
     {
-        var request = new List<String>();
-        request.Add("1 w6 : 2 e7");
-        request.Add("2 w5 : 1 e1");
+        var request = "1 w6 : 2 e7\n2 w5 : 1 e1";
         RequestParser(request);
     }
 
-    private void RequestParser(List<String> request)
+    private void RequestParser(String request)
     {
-        foreach (var line in request)
+        var lines = request.Split("\n");
+        foreach (var line in lines)
         {
             var splittedLine = line.Split(":");
             if (splittedLine.Length != 2)
