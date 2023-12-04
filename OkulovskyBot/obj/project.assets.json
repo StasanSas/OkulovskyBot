@@ -15,7 +15,7 @@
           }
         }
       },
-      "Telegram.Bot/19.0.0": {
+      "Telegram.Bot/20.0.0-alpha.1": {
         "type": "package",
         "dependencies": {
           "Newtonsoft.Json": "13.0.1"
@@ -61,10 +61,10 @@
         "packageIcon.png"
       ]
     },
-    "Telegram.Bot/19.0.0": {
-      "sha512": "Q16IOitgjGoaJOuqgKQy0FeF+hr/ncmlX2esrhCC7aiyhSX7roYEriWaGAHkQZR8QzbImjFfl4eQh2IxcnOrPg==",
+    "Telegram.Bot/20.0.0-alpha.1": {
+      "sha512": "CfqeVWWz1GlrO1aq491kIfGh7G7IdijAoLyfzZ2BygVj+ld86ry0PvqKicjIuq/43yHynshkiPOdnNQ9ku5yyw==",
       "type": "package",
-      "path": "telegram.bot/19.0.0",
+      "path": "telegram.bot/20.0.0-alpha.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -75,30 +75,30 @@
         "lib/netstandard2.0/Telegram.Bot.pdb",
         "lib/netstandard2.0/Telegram.Bot.xml",
         "package-icon.png",
-        "telegram.bot.19.0.0.nupkg.sha512",
+        "telegram.bot.20.0.0-alpha.1.nupkg.sha512",
         "telegram.bot.nuspec"
       ]
     }
   },
   "projectFileDependencyGroups": {
     "net7.0": [
-      "Telegram.Bot >= 19.0.0"
+      "Telegram.Bot >= 20.0.0-alpha.1"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Acer\\.nuget\\packages\\": {}
+    "C:\\Users\\haier\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
+      "projectUniqueName": "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
       "projectName": "OkulovskyBot",
-      "projectPath": "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
-      "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\obj\\",
+      "projectPath": "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
+      "packagesPath": "C:\\Users\\haier\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\haier\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -126,7 +126,7 @@
         "dependencies": {
           "Telegram.Bot": {
             "target": "Package",
-            "version": "[19.0.0, )"
+            "version": "[20.0.0-alpha.1, )"
           }
         },
         "imports": [
@@ -145,7 +145,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
       }
     }
   }

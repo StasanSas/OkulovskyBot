@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj": {}
+    "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj": {
+    "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
+        "projectUniqueName": "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
         "projectName": "OkulovskyBot",
-        "projectPath": "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
-        "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Acer\\Desktop\\bot\\OkulovskyBot\\OkulovskyBot\\obj\\",
+        "projectPath": "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\OkulovskyBot.csproj",
+        "packagesPath": "C:\\Users\\haier\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\haier\\Desktop\\prog\\OkulovskyBot\\OkulovskyBot\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\haier\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -42,7 +42,7 @@
           "dependencies": {
             "Telegram.Bot": {
               "target": "Package",
-              "version": "[19.0.0, )"
+              "version": "[20.0.0-alpha.1, )"
             }
           },
           "imports": [
@@ -61,7 +61,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
         }
       }
     }
