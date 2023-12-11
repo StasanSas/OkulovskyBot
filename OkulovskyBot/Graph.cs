@@ -334,6 +334,8 @@ namespace DrawerGraphs
             graph.Edges.AddEdge(graph.Nodes[1].Connect(graph.Nodes[2]));
             graph.Edges.AddEdge(graph.Nodes[1].Connect(graph.Nodes[3]));
             graph.Edges.AddEdge(graph.Nodes[0].Connect(graph.Nodes[4]));
+            graph.Edges.AddEdge(graph.Nodes[2].Connect(graph.Nodes[3]));
+            graph.Edges.AddEdge(graph.Nodes[2].Connect(graph.Nodes[4]));
             var firstNode = graph.Nodes[0];
             var secondEdge = graph.Edges[1, 2];
             Algoritms.Alg(graph);
@@ -459,7 +461,7 @@ namespace DrawerGraphs
             
             var counterObject = GetCounterObjectInGraph(changes);
             size = (int)(200 * Math.Sqrt(counterObject));
-            NodeVisualData.Radius = (size / (2 * counterObject)) + 1;
+            NodeVisualData.Radius = (size / (counterObject)) + 1;
             EdgeVisualData.Weidth = (size / (10 * counterObject)) + 1;
             foreach(var change in changes)
             {
@@ -576,23 +578,27 @@ namespace DrawerGraphs
                 NodeVisualData.isFirstNode = false;
                 return null;
             }
-            var distanceMin = 3 * NodeVisualData.Radius;
-            var distanceMax = 5 * NodeVisualData.Radius;
+            var distanceMin = 4 * NodeVisualData.Radius;
+            var distanceMax = 6 * NodeVisualData.Radius;
             double maxAmountEdgeIntersections = 0;
             while (true)
             {
+                Console.WriteLine(change.Id[0]);
+                Console.WriteLine(change.Id[0]);
+                Console.WriteLine(change.Id[0]);
                 var randomX = rnd.Next(0 + 2 * NodeVisualData.Radius , size - NodeVisualData.Radius);
                 var randomY = rnd.Next(0 + 2 * NodeVisualData.Radius , size  - NodeVisualData.Radius);
                 if (!IsInCorrectDistanceFromNodes(randomX, randomY, distanceMin, distanceMax))
                 {
-                    distanceMax += NodeVisualData.Radius + 1;
+                    distanceMax += 1;
                     continue;
                 }
-                if (!IsNotInsertNodeIfConnectWithOtherNode(randomX, randomY))
+                if (IsInsertNodeIfConnectWithOtherNode(randomX, randomY))
                     continue;
                 if (AmountInsertEdgeIfConnectWithOtherNode(randomX, randomY) > maxAmountEdgeIntersections)
                 {
-                    maxAmountEdgeIntersections += 0.25;
+                    Console.WriteLine(maxAmountEdgeIntersections);
+                    maxAmountEdgeIntersections += 0.000001;
                     continue;
                 }
                 dataNodeVisual.Add(newNode, new NodeVisualData(randomX, randomY));
@@ -603,19 +609,24 @@ namespace DrawerGraphs
 
         public bool IsInCorrectDistanceFromNodes(int x, int y, int distanceMin, int distanceMax)
         {
+            var flag = false;
             foreach (var node in visualizedGraph.Nodes)
             {
                 var pointCurrNode = dataNodeVisual[node];
                 var distance = Infrastructure.GetDistance(x, y, pointCurrNode.X, pointCurrNode.Y);
-                if ( distanceMin<= distance && distance <= distanceMax)
-                    return true;
+                if (distanceMin >= distance)
+                    return false;
+                if (distance < distanceMax)
+                    flag = true;
             }
-            return false;
+            return flag;
+            
         }
 
-        public bool IsNotInsertNodeIfConnectWithOtherNode(int x, int y)
+        public bool IsInsertNodeIfConnectWithOtherNode(int x, int y)
         {
-            var r = NodeVisualData.Radius;
+
+            var r = 2 * NodeVisualData.Radius;
             foreach (var node in visualizedGraph.Nodes)
             {
                 var pointCurrNode = dataNodeVisual[node];
@@ -626,16 +637,20 @@ namespace DrawerGraphs
                         continue;
                     var centerCircusX = dataNodeVisual[currNode].X;
                     var centerCircusY = dataNodeVisual[currNode].Y;
+                    Console.WriteLine();
+                    Console.WriteLine($"{node.Id} {currNode.Id}");
+                    Console.WriteLine($"{centerCircusX}, {centerCircusY}, {r}, {x1}, {y1}, {x2}, {y2}");
                     if (Infrastructure.IsCircleIntersectSegment(centerCircusX, centerCircusY, r, x1, y1, x2, y2))
-                        return false;
+                        return true;
+                    Console.WriteLine();
                 }
             }
-            return true;
+            return false;
         }
 
         public int AmountInsertEdgeIfConnectWithOtherNode(int x, int y)
         {
-            var r = NodeVisualData.Radius;
+            var r = 2 * NodeVisualData.Radius;
             var counter = 0;
             foreach (var node in visualizedGraph.Nodes)
             {
@@ -681,7 +696,7 @@ namespace DrawerGraphs
             var yLetter = (dataEdgeVisual[edge].Start.Y + dataEdgeVisual[edge].End.Y) / 2;
 
             Font drawFont = new Font("Arial", EdgeVisualData.Weidth * 3);
-            SolidBrush drawBrush = new SolidBrush(Color.Black);
+            SolidBrush drawBrush = new SolidBrush(Color.BlueViolet);
 
             // Рисуем цифру 5 в координатах (10, 10) на изображении
             g.DrawString(edge.Weight.ToString(), drawFont, drawBrush, new PointF(xLetter, yLetter));
@@ -699,7 +714,7 @@ namespace DrawerGraphs
             var pointNode = dataNodeVisual[node];
             g.FillEllipse(brush, pointNode.X - size, pointNode.Y - size, 2 * size, 2 * size);
             Font drawFont = new Font("Arial", EdgeVisualData.Weidth * 3);
-            SolidBrush drawBrush = new SolidBrush(Color.Black);
+            SolidBrush drawBrush = new SolidBrush(Color.BlueViolet);
 
             // Рисуем цифру 5 в координатах (10, 10) на изображении
             g.DrawString(node.Weight.ToString(), drawFont, drawBrush, new PointF(pointNode.X, pointNode.Y));
@@ -731,30 +746,14 @@ namespace DrawerGraphs
         public static bool IsCircleIntersectSegment(double centerCirculx, double centerCircuy, double radius,
             double x1, double y1, double x2, double y2)
         {
-            double closestX = 0;
-            double closestY = 0;
-            double dx = x2 - x1;
-            double dy = y2 - y1;
+            var m = (y2 - y1) / (x2 - x1);
+            var b = y1 - (m * x1);
 
-            double t = ((centerCirculx - x1) * dx + (centerCircuy - y1) * dy) / (dx * dx + dy * dy);
+            var A = m; var B = -1; var C = b; var x0 = centerCirculx; var y0 = centerCircuy;
 
-            if (t < 0) 
-            {
-                closestX = x1;
-                closestY = y1;
-            }
-            else if (t > 1) 
-            {
-                closestX = x2;
-                closestY = y2;
-            }
-            else 
-            {
-                closestX = x1 + t * dx;
-                closestY = y1 + t * dy;
-            }
-            double distance = Math.Sqrt((closestX - centerCirculx) * (closestX - centerCirculx) + 
-                (closestY - centerCircuy) * (closestY - centerCircuy));
+            var distance = Math.Abs(A * x0 + B * y0 + C) / Math.Sqrt(A * A + B * B);
+
+            Console.WriteLine(distance);
             return distance <= radius;
         }
 

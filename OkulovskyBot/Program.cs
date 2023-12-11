@@ -15,11 +15,7 @@ namespace OkulovskyBot
 {
     class HelloWorld
     {
-        static void Main()
-        {
-            var okula = new Bot();
-            okula.Update();
-        }
+
     }
 
     public class BaseData
