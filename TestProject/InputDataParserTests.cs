@@ -15,5 +15,6 @@ public class Tests
     {
         var request = "1 w6 : 2 e7\n2 w5 : 1 e1";
         new InputDataParser().Parse();
+        
     }
 }
