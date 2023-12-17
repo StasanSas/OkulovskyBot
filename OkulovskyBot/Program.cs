@@ -21,6 +21,30 @@ namespace OkulovskyBot
     public class BaseData
     {
         public List<BuilderImplementation> builder = new List<BuilderImplementation>();
+
+        private string connectionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=Okulovsky242;Integrated Security=True";
+
+        private DatabaseHelper databaseHelper;
+
+        public BaseData()
+        {
+            databaseHelper = new DatabaseHelper(connectionString);
+        }
+
+        public void SaveToDatabase(BuilderImplementation implementation)
+        {
+            databaseHelper.InsertBuilderImplementation(implementation);
+        }
+
+        public void LoadFromDatabase()
+        {
+            builder = databaseHelper.GetAllBuilderImplementations();
+        }
+
+        public BuilderImplementation GetImplementationFromDatabaseByName(string name)
+        {
+            return databaseHelper.GetBuilderImplementationByName(name);
+        }
     }
 
     public class Account
@@ -361,7 +385,7 @@ namespace OkulovskyBot
                 return;
             if (update.CallbackQuery.Data == "Подтвердить")
                 bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Реализация добавленна в базу", replyMarkup: Infrastructure.GetMenuButtons());
-            bot.data.builder.Add(builder);
+            bot.data.SaveToDatabase(builder);
             var account = Account.ParseUpdateInAccount(update);
             bot.accountsData[account] = new BaseState();
 
@@ -393,6 +417,75 @@ namespace OkulovskyBot
 
         }
 
+    }
+
+    public class FindState : IStatusBotVisitor
+    {
+        List<Action<Update, Bot>> substates;
+        private List<BuilderImplementation> implementations;
+
+        int pointerToSubstate;
+
+        public FindState()
+        {
+            substates = new List<Action<Update, Bot>>
+            {
+                GetImplementationFromDatabase
+            };
+            pointerToSubstate = 0;
+        }
+
+        public bool ProcessingWrongMessage(Update update, Bot bot, UpdateType type, string message)
+        {
+            if (update.Type == UpdateType.Message && update.Message.Text == null)
+                return false;
+            if (update.Type != type)
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message);
+                return true;
+            }
+            return false;
+        }
+
+        public void GetImplementationFromDatabase(Update update, Bot bot)
+        {
+            if (ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название реализации"))
+                return;
+            var name = update.Message.Text;
+            var implementation = bot.data.GetImplementationFromDatabaseByName(name);
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+                $"{implementation.Name}\n\n{implementation.Description}\n\n{implementation.Code}");
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вот такая клёвая реализация", replyMarkup: Infrastructure.GetMenuButtons());
+            var account = Account.ParseUpdateInAccount(update);
+            bot.accountsData[account] = new BaseState();
+        }
+
+
+        public void Process(Update update, Bot bot)
+        {
+            if (!TryProcessMenu(update, bot))
+                substates[pointerToSubstate](update, bot);
+        }
+
+        public bool TryProcessMenu(Update update, Bot bot)
+        {
+            if (update.Message == null) return false;
+
+            if (update.Message.Text == "Помощь")
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Даже Окуловский вам не поможет");
+                return true;
+            }
+            else if (update.Message.Text == "Назад")
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Ну ладно", replyMarkup: Infrastructure.GetMenuButtons());
+                var account = Account.ParseUpdateInAccount(update);
+                bot.accountsData[account] = new BaseState();
+                return true;
+            }
+            return false;
+
+        }
     }
 }
 
