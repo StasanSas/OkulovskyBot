@@ -4,10 +4,16 @@ namespace OkulovskyBot;
 
 public class InputDataParser
 {
-    public void Parse()
+    private readonly string request;
+    
+    public InputDataParser(string request)
     {
-        var request = "1 w6 : 2 e7\n2 w5 : 1 e1";
-        var graphData = RequestParser(request);
+        this.request = request;
+    }
+    
+    public GraphCreationData Parse()
+    {
+        return RequestParser(request);
     }
 
     private GraphCreationData RequestParser(String request)
@@ -29,7 +35,7 @@ public class InputDataParser
         return new GraphCreationData(nodesInfo, edgesInfo);
     }
 
-    private record GraphCreationData(List<NodeInfo> NodesInfo,
+    public record GraphCreationData(List<NodeInfo> NodesInfo,
         List<EdgeInfo> EdgesInfo);
 
     private record EdgesInfo(List<EdgeInfo> EdgeInfos)
@@ -50,7 +56,7 @@ public class InputDataParser
         }
     }
     
-    private record EdgeInfo(string FirstNodeName, string SecondNodeName, int? Weight)
+    public record EdgeInfo(string FirstNodeName, string SecondNodeName, int? Weight)
     {
         private static readonly string NameWeightPattern = @"^ *(\d+) *[eE](\d+) *$";
         public static EdgeInfo Create(string firstNodeName, string inputString)
@@ -67,7 +73,7 @@ public class InputDataParser
         }
     }
 
-    private record NodeInfo(String Name, int? Weight)
+    public record NodeInfo(String Name, int? Weight)
     {
         private static readonly String NameWeightPattern = @"^ *(\d+) *[wW](\d+) *$";
         public static NodeInfo Create(String inputString)
