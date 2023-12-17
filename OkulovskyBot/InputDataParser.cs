@@ -7,11 +7,13 @@ public class InputDataParser
     public void Parse()
     {
         var request = "1 w6 : 2 e7\n2 w5 : 1 e1";
-        RequestParser(request);
+        var graphData = RequestParser(request);
     }
 
-    private void RequestParser(String request)
+    private GraphCreationData RequestParser(String request)
     {
+        var nodesInfo = new List<NodeInfo>();
+        var edgesInfo = new List<EdgeInfo>();
         var lines = request.Split("\n");
         foreach (var line in lines)
         {
@@ -21,10 +23,14 @@ public class InputDataParser
                 throw new ArgumentException("Incorrect separator count");
             }
             var nodeInfo = NodeInfo.Create(splittedLine[0]);
-            var edgesInfo = EdgesInfo.Create(nodeInfo.Name, splittedLine[1]);
-            var a = 1 + 1;
+            nodesInfo.Add(nodeInfo);
+            edgesInfo.AddRange(EdgesInfo.Create(nodeInfo.Name, splittedLine[1]).EdgeInfos);
         }
+        return new GraphCreationData(nodesInfo, edgesInfo);
     }
+
+    private record GraphCreationData(List<NodeInfo> NodesInfo,
+        List<EdgeInfo> EdgesInfo);
 
     private record EdgesInfo(List<EdgeInfo> EdgeInfos)
     {
@@ -44,7 +50,7 @@ public class InputDataParser
         }
     }
     
-    private record EdgeInfo(string firstNodeName, string secondNodeName, int? Weight)
+    private record EdgeInfo(string FirstNodeName, string SecondNodeName, int? Weight)
     {
         private static readonly string NameWeightPattern = @"^ *(\d+) *[eE](\d+) *$";
         public static EdgeInfo Create(string firstNodeName, string inputString)
