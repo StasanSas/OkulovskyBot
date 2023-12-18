@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.ComponentModel.Design;
-using System.Data;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Collections;
 using Color = System.Drawing.Color;
 
@@ -9,22 +6,22 @@ namespace DrawerGraphs;
 
 public class Graph<TId, TWeight, TState>
 {
-    public Dictionary<TId, NodeVisual<TId, TWeight, TState>> nodesDict = 
+    public readonly Dictionary<TId, NodeVisual<TId, TWeight, TState>> NodesDict = 
         new Dictionary<TId, NodeVisual<TId, TWeight, TState>>();
 
-    public Dictionary<Tuple<TId, TId>, EdgeVisual<TId, TWeight, TState>> edgesDict =
+    public readonly Dictionary<Tuple<TId, TId>, EdgeVisual<TId, TWeight, TState>> EdgesDict =
         new Dictionary<Tuple<TId, TId>, EdgeVisual<TId, TWeight, TState>>();
 
-    public NodeIndexer<TId, TWeight, TState> Nodes;
-    public EdgeIndexer<TId, TWeight, TState> Edges;
+    public readonly NodeIndexer Nodes;
+    public readonly EdgeIndexer Edges;
     public Graph()
     {
-        Nodes = new NodeIndexer<TId, TWeight, TState>(this);
-        Edges = new EdgeIndexer<TId, TWeight, TState>(this);
+        Nodes = new NodeIndexer(this);
+        Edges = new EdgeIndexer(this);
     }
 
 
-    public class NodeIndexer<TId, TWeight, TState> : IEnumerable<NodeVisual<TId, TWeight, TState>>
+    public class NodeIndexer : IEnumerable<NodeVisual<TId, TWeight, TState>>
     {
         public Graph<TId, TWeight, TState> parent;
         public NodeIndexer(Graph<TId, TWeight, TState> parent)
@@ -36,26 +33,26 @@ public class Graph<TId, TWeight, TState>
         {
             get
             {
-                if (parent.nodesDict.ContainsKey(id))
-                    return parent.nodesDict[id];
+                if (parent.NodesDict.ContainsKey(id))
+                    return parent.NodesDict[id];
                 throw new KeyNotFoundException();
             }
         }
 
         public void AddNode(NodeVisual<TId, TWeight, TState> node)
         {
-            parent.nodesDict[node.Id] = node;
+            parent.NodesDict[node.Id] = node;
         }
 
         public IEnumerator<NodeVisual<TId, TWeight, TState>> GetEnumerator()
         {
-            foreach (var keyAndValue in parent.nodesDict.AsEnumerable())
+            foreach (var keyAndValue in parent.NodesDict.AsEnumerable())
                 yield return keyAndValue.Value;
         }
 
         public void RemoveNode(NodeVisual<TId, TWeight, TState> node)
         {
-            parent.nodesDict.Remove(node.Id);
+            parent.NodesDict.Remove(node.Id);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -64,7 +61,7 @@ public class Graph<TId, TWeight, TState>
         }
     }
 
-    public class EdgeIndexer<TId, TWeight, TState> : IEnumerable<EdgeVisual<TId, TWeight, TState>>
+    public class EdgeIndexer : IEnumerable<EdgeVisual<TId, TWeight, TState>>
     {
         public Graph<TId, TWeight, TState> parent;
         public EdgeIndexer(Graph<TId, TWeight, TState> parent)
@@ -76,35 +73,35 @@ public class Graph<TId, TWeight, TState>
         {
             get
             {
-                var idEnge = Tuple.Create(idStart, idEnd);
-                if (parent.edgesDict.ContainsKey(idEnge))
-                    return parent.edgesDict[idEnge];
+                var IdEdge = Tuple.Create(idStart, idEnd);
+                if (parent.EdgesDict.ContainsKey(IdEdge))
+                    return parent.EdgesDict[IdEdge];
                 throw new KeyNotFoundException();
             }
         }
 
         public void AddEdge(EdgeVisual<TId, TWeight, TState> edge)
         {
-            var idEnge = Tuple.Create(edge.Start.Id, edge.End.Id);
-            if (!parent.nodesDict.ContainsKey(edge.Start.Id) ||
-                !parent.nodesDict.ContainsKey(edge.End.Id))
+            var IdEdge = Tuple.Create(edge.Start.Id, edge.End.Id);
+            if (!parent.NodesDict.ContainsKey(edge.Start.Id) ||
+                !parent.NodesDict.ContainsKey(edge.End.Id))
                 throw new KeyNotFoundException();
-            parent.edgesDict[idEnge] = edge;
+            parent.EdgesDict[IdEdge] = edge;
         }
 
 
         public IEnumerator<EdgeVisual<TId, TWeight, TState>> GetEnumerator()
         {
-            foreach (var keyAndValue in parent.edgesDict.AsEnumerable())
+            foreach (var keyAndValue in parent.EdgesDict.AsEnumerable())
                 yield return keyAndValue.Value;
         }
 
         public void RemoveEdge(EdgeVisual<TId, TWeight, TState> edge)
         {
-            var idEnge = Tuple.Create(edge.Start.Id, edge.End.Id);
-            if (!parent.edgesDict.ContainsKey(idEnge))
+            var IdEdge = Tuple.Create(edge.Start.Id, edge.End.Id);
+            if (!parent.EdgesDict.ContainsKey(IdEdge))
                 throw new KeyNotFoundException();
-            parent.edgesDict.Remove(idEnge);
+            parent.EdgesDict.Remove(IdEdge);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -114,9 +111,9 @@ public class Graph<TId, TWeight, TState>
     }
 }
 
-public interface PartGraph { }
+public interface IPartGraph { }
 
-public class EdgeVisual<TId, TWeight, TState> : PartGraph
+public class EdgeVisual<TId, TWeight, TState> : IPartGraph
 {
     private TWeight weight;
     private TState state;
@@ -179,7 +176,7 @@ public class EdgeVisual<TId, TWeight, TState> : PartGraph
     }
 }
 
-public class NodeVisual<TId, TWeight, TState> : PartGraph
+public class NodeVisual<TId, TWeight, TState> : IPartGraph
 {
     private TWeight weight;
     private TState state;
@@ -340,11 +337,11 @@ public class Program
         Algoritms.Alg(graph);
         NodeVisual<int, int, N>.flag = false;
         EdgeVisual<int, int, N>.flag = false;
-        var viz = new Visualizator<int, int, N>(observer.changes, ParseCollor);
+        var viz = new Visualizator<int, int, N>(observer.changes, ParseColor);
         viz.StartVisualize();
     }
 
-    public static Color ParseCollor(N state)
+    public static Color ParseColor(N state)
     {
         if (state == N.None)
             return Color.White;
@@ -426,7 +423,7 @@ public class EdgeVisualData
 {
     public NodeVisualData Start { get; private set; }
     public NodeVisualData End { get; private set; }
-    public static int Weidth;
+    public static int Weight;
 
     public EdgeVisualData(NodeVisualData start, NodeVisualData end)
     { Start = start; End = end; }
@@ -443,14 +440,14 @@ public class Visualizator<TId, TWeight, TState>
     Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData> dataEdgeVisual;
     int size;
     int counterForSave = 0;
-    Func<TState, Color> parserCollor;
+    Func<TState, Color> parserColor;
     
 
-    public Visualizator(List<Change<List<TId>, TWeight, TState>> changes, Func<TState, Color> parserCollor)
+    public Visualizator(List<Change<List<TId>, TWeight, TState>> changes, Func<TState, Color> parserColor)
     {
         visualizedGraph = new Graph<TId, TWeight, TState>();
         this.changes = changes;
-        this.parserCollor = parserCollor;
+        this.parserColor = parserColor;
         dataNodeVisual = new Dictionary<NodeVisual<TId, TWeight, TState>, NodeVisualData>();
         dataEdgeVisual = new Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData>();
     }
@@ -461,11 +458,11 @@ public class Visualizator<TId, TWeight, TState>
         var counterObject = GetCounterObjectInGraph(changes);
         size = (int)(200 * Math.Sqrt(counterObject));
         NodeVisualData.Radius = (size / (counterObject)) + 1;
-        EdgeVisualData.Weidth = (size / (10 * counterObject)) + 1;
+        EdgeVisualData.Weight = (size / (10 * counterObject)) + 1;
         foreach(var change in changes)
         {
             bmp = new Bitmap(size, size);
-            PartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
+            IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
             DrawGraph(changeOnlyOnThisStep);
         }
     }
@@ -491,9 +488,9 @@ public class Visualizator<TId, TWeight, TState>
     }
 
 
-    public PartGraph? AddChangeInGraph(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? AddChangeInGraph(Change<List<TId>, TWeight, TState> change)
     {
-        var d = new Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, PartGraph?>>
+        var d = new Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>>
         { 
             [TypeChange.CreateNode] = AddNode, 
             [TypeChange.RemoveNode] = RemoveNode,
@@ -514,23 +511,23 @@ public class Visualizator<TId, TWeight, TState>
         return result;
     }
 
-    public PartGraph? GetEdge(Change<List<TId>, TWeight, TState> change)
-        => visualizedGraph.edgesDict[Tuple.Create(change.Id[0], change.Id[1])];
+    public IPartGraph? GetEdge(Change<List<TId>, TWeight, TState> change)
+        => visualizedGraph.EdgesDict[Tuple.Create(change.Id[0], change.Id[1])];
 
-    public PartGraph? GetNode(Change<List<TId>, TWeight, TState> change)
-        => visualizedGraph.nodesDict[change.Id[0]];
+    public IPartGraph? GetNode(Change<List<TId>, TWeight, TState> change)
+        => visualizedGraph.NodesDict[change.Id[0]];
 
-    public PartGraph? ChangeNode(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? ChangeNode(Change<List<TId>, TWeight, TState> change)
     {
-        var node = visualizedGraph.nodesDict[change.Id[0]];
+        var node = visualizedGraph.NodesDict[change.Id[0]];
         node.Weight = change.Weight;
         node.State = change.State;
         return node;
     }
 
-    public PartGraph? ChangeEdge(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? ChangeEdge(Change<List<TId>, TWeight, TState> change)
     {
-        var edge = visualizedGraph.edgesDict[Tuple.Create(change.Id[0], change.Id[1])];
+        var edge = visualizedGraph.EdgesDict[Tuple.Create(change.Id[0], change.Id[1])];
         edge.Weight = change.Weight;
         edge.State = change.State;
         return edge;
@@ -538,33 +535,33 @@ public class Visualizator<TId, TWeight, TState>
 
 
 
-    public PartGraph? RemoveEdge(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? RemoveEdge(Change<List<TId>, TWeight, TState> change)
     {
-        var currEdge = visualizedGraph.edgesDict[Tuple.Create(change.Id[0], change.Id[1])];
+        var currEdge = visualizedGraph.EdgesDict[Tuple.Create(change.Id[0], change.Id[1])];
         dataEdgeVisual.Remove(currEdge);
         visualizedGraph.Edges.RemoveEdge(currEdge);
         return null;
     }
 
-    public PartGraph? AddEdge(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? AddEdge(Change<List<TId>, TWeight, TState> change)
     {
-        var start = visualizedGraph.nodesDict[change.Id[0]];
-        var end = visualizedGraph.nodesDict[change.Id[1]];
+        var start = visualizedGraph.NodesDict[change.Id[0]];
+        var end = visualizedGraph.NodesDict[change.Id[1]];
         var newEdge = start.Connect(end, change.Weight, change.State);
         dataEdgeVisual.Add(newEdge, new EdgeVisualData(dataNodeVisual[start], dataNodeVisual[end]));
         visualizedGraph.Edges.AddEdge(newEdge);
         return null;
     }
 
-    public PartGraph? RemoveNode(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? RemoveNode(Change<List<TId>, TWeight, TState> change)
     {
-        var currNode = visualizedGraph.nodesDict[change.Id[0]];
+        var currNode = visualizedGraph.NodesDict[change.Id[0]];
         dataNodeVisual.Remove(currNode);
         visualizedGraph.Nodes.RemoveNode(currNode);    
         return null;
     }
 
-    public PartGraph? AddNode(Change<List<TId>, TWeight, TState> change)
+    public IPartGraph? AddNode(Change<List<TId>, TWeight, TState> change)
     {
         var newNode = new NodeVisual<TId, TWeight, TState>(change.Id[0], change.Weight, change.State);
         Random rnd = new Random();
@@ -669,7 +666,7 @@ public class Visualizator<TId, TWeight, TState>
 
 
 
-    public void DrawGraph(PartGraph changeOnlyOnThisStep)
+    public void DrawGraph(IPartGraph changeOnlyOnThisStep)
     {
         var g = Graphics.FromImage(bmp);
         foreach (var edge in visualizedGraph.Edges)
@@ -682,37 +679,37 @@ public class Visualizator<TId, TWeight, TState>
         bmp.Dispose();
     }
 
-    public void DrawEdge(EdgeVisual<TId, TWeight, TState> edge ,PartGraph changeOnlyOnThisStep, Graphics g)
+    public void DrawEdge(EdgeVisual<TId, TWeight, TState> edge ,IPartGraph changeOnlyOnThisStep, Graphics g)
     {
         Pen pen;
         if (edge == changeOnlyOnThisStep)
-            pen = new Pen(parserCollor(edge.State), EdgeVisualData.Weidth * 3);
+            pen = new Pen(parserColor(edge.State), EdgeVisualData.Weight * 3);
         else
-            pen = new Pen(parserCollor(edge.State), EdgeVisualData.Weidth);
+            pen = new Pen(parserColor(edge.State), EdgeVisualData.Weight);
         g.DrawLine(pen, dataEdgeVisual[edge].Start.X, dataEdgeVisual[edge].Start.Y,
                    dataEdgeVisual[edge].End.X, dataEdgeVisual[edge].End.Y);
         var xLetter = (dataEdgeVisual[edge].Start.X + dataEdgeVisual[edge].End.X) / 2;
         var yLetter = (dataEdgeVisual[edge].Start.Y + dataEdgeVisual[edge].End.Y) / 2;
 
-        Font drawFont = new Font("Arial", EdgeVisualData.Weidth * 3);
+        Font drawFont = new Font("Arial", EdgeVisualData.Weight * 3);
         SolidBrush drawBrush = new SolidBrush(Color.BlueViolet);
 
         // Рисуем цифру 5 в координатах (10, 10) на изображении
         g.DrawString(edge.Weight.ToString(), drawFont, drawBrush, new PointF(xLetter, yLetter));
     }
 
-    public void DrawNode(NodeVisual<TId, TWeight, TState> node, PartGraph changeOnlyOnThisStep, Graphics g)
+    public void DrawNode(NodeVisual<TId, TWeight, TState> node, IPartGraph changeOnlyOnThisStep, Graphics g)
     {
-        SolidBrush brush = new SolidBrush(parserCollor(node.State));
+        SolidBrush brush = new SolidBrush(parserColor(node.State));
         int size;
         if (node == changeOnlyOnThisStep)
             size = (int)(1.5 * NodeVisualData.Radius);
         else
             size = NodeVisualData.Radius;
-        brush.Color = parserCollor(node.State);
+        brush.Color = parserColor(node.State);
         var pointNode = dataNodeVisual[node];
         g.FillEllipse(brush, pointNode.X - size, pointNode.Y - size, 2 * size, 2 * size);
-        Font drawFont = new Font("Arial", EdgeVisualData.Weidth * 3);
+        Font drawFont = new Font("Arial", EdgeVisualData.Weight * 3);
         SolidBrush drawBrush = new SolidBrush(Color.BlueViolet);
 
         // Рисуем цифру 5 в координатах (10, 10) на изображении
