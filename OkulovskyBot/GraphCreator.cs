@@ -7,8 +7,6 @@ public static class GraphCreator
     public static Graph<string, int?, N> GetParsedGraph(string inputGraphInfo)
     {
         var observer = new Observer<string, int?, N>();
-        NodeVisual<string, int?, N>.observer = observer;
-        EdgeVisual<string, int?, N>.observer = observer;
         var graph = new Graph<string, int?, N>();
         var graphData = new InputDataParser(inputGraphInfo).Parse();
         foreach (var nodeInfo in graphData.NodesInfo)

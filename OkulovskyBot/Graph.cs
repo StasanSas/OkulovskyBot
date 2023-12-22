@@ -1,23 +1,38 @@
 ﻿using System.Drawing;
 using System.Collections;
 using Color = System.Drawing.Color;
+using System.Xml.Linq;
 
 namespace DrawerGraphs;
 
 public class Graph<TId, TWeight, TState>
 {
-    public readonly Dictionary<TId, NodeVisual<TId, TWeight, TState>> NodesDict = 
+    protected readonly Dictionary<TId, NodeVisual<TId, TWeight, TState>> NodesDict = 
         new Dictionary<TId, NodeVisual<TId, TWeight, TState>>();
 
-    public readonly Dictionary<Tuple<TId, TId>, EdgeVisual<TId, TWeight, TState>> EdgesDict =
+    protected readonly Dictionary<Tuple<TId, TId>, EdgeVisual<TId, TWeight, TState>> EdgesDict =
         new Dictionary<Tuple<TId, TId>, EdgeVisual<TId, TWeight, TState>>();
+
+    private Observer<TId, TWeight, TState>? observer = null;
+    private bool isWithObserver;
 
     public readonly NodeIndexer Nodes;
     public readonly EdgeIndexer Edges;
-    public Graph()
+    public Graph(bool isWithObserver = false)
     {
         Nodes = new NodeIndexer(this);
         Edges = new EdgeIndexer(this);
+        this.isWithObserver = isWithObserver;
+        if (isWithObserver)
+            observer = new Observer<TId, TWeight, TState>();
+    }
+
+    public List<Change<List<TId>, TWeight, TState>> GetChanges()
+    {
+        if (this.isWithObserver)
+            return observer.changes;
+        else
+            throw new Exception();
     }
 
 
@@ -41,7 +56,8 @@ public class Graph<TId, TWeight, TState>
 
         public void AddNode(NodeVisual<TId, TWeight, TState> node)
         {
-            parent.NodesDict[node.Id] = node;
+            var addedNode = new NodeVisual<TId, TWeight, TState>(node.Id, node.Weight, node.State, parent.observer);
+            parent.NodesDict[node.Id] = addedNode;           
         }
 
         public IEnumerator<NodeVisual<TId, TWeight, TState>> GetEnumerator()
@@ -86,7 +102,10 @@ public class Graph<TId, TWeight, TState>
             if (!parent.NodesDict.ContainsKey(edge.Start.Id) ||
                 !parent.NodesDict.ContainsKey(edge.End.Id))
                 throw new KeyNotFoundException();
-            parent.EdgesDict[IdEdge] = edge;
+            var startNode = parent.NodesDict[edge.Start.Id];
+            var endNode = parent.NodesDict[edge.End.Id];
+            var addedEdge = new EdgeVisual<TId, TWeight, TState>(startNode, endNode, edge.Weight, edge.State, parent.observer);
+            parent.EdgesDict[IdEdge] = addedEdge;
         }
 
 
@@ -120,9 +139,23 @@ public class EdgeVisual<TId, TWeight, TState> : IPartGraph
     public NodeVisual<TId, TWeight, TState> Start { get; private set; }
     public NodeVisual<TId, TWeight, TState> End { get; private set; }
 
-    public static Observer<TId, TWeight, TState> observer;
+    private Observer<TId, TWeight, TState>? observer = null;
 
-    public static bool flag = true;
+    public Observer<TId, TWeight, TState>? Observer 
+    {
+        get 
+        { 
+            return observer; 
+        }
+        set
+        {
+            if (observer is null)
+                observer = value;
+            else
+                throw new Exception();
+        }    
+    }
+
     public TWeight Weight
     {
         get
@@ -152,12 +185,15 @@ public class EdgeVisual<TId, TWeight, TState> : IPartGraph
 
     public EdgeVisual(NodeVisual<TId, TWeight, TState> start, 
                       NodeVisual<TId, TWeight, TState> end,
-                      TWeight Weight = default(TWeight), TState State = default(TState))
+                      TWeight Weight = default(TWeight), 
+                      TState State = default(TState),
+                      Observer<TId, TWeight, TState>? observer = null)
     {
         weight = Weight;
         state = State;
         Start = start;
         End = end;
+        Observer = observer;
         GetSignal(TypeChange.CreateEdge);
     }
 
@@ -168,11 +204,24 @@ public class EdgeVisual<TId, TWeight, TState> : IPartGraph
 
     public void GetSignal(TypeChange type)
     {
-        if (flag)
+        if (observer != null)
             observer.AddChange(
                 new Change<List<TId>, TWeight, TState>(
                     type, new List<TId>() { Start.Id, End.Id },
                     weight, state));
+    }
+
+    public override int GetHashCode()
+    {
+        return Start.Id.GetHashCode() + End.Id.GetHashCode() * 379;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj.GetType() != typeof(EdgeVisual<TId, TWeight, TState>))
+            return false;
+        var objTypeOfNodeVisual = obj as EdgeVisual<TId, TWeight, TState>;
+        return Start.Id.Equals(objTypeOfNodeVisual.Start.Id) && End.Id.Equals(objTypeOfNodeVisual.End.Id);
     }
 }
 
@@ -182,9 +231,23 @@ public class NodeVisual<TId, TWeight, TState> : IPartGraph
     private TState state;
 
 
-    public static Observer<TId, TWeight, TState> observer;
+    private Observer<TId, TWeight, TState>? observer = null;
 
-    public static bool flag = true;
+    public Observer<TId, TWeight, TState>? Observer
+    {
+        get
+        {
+            return observer;
+        }
+        set
+        {
+            if (observer is null)
+                observer = value;
+            else
+                throw new Exception();
+        }
+    }
+
     public TId Id { get; private set; }
     public TWeight Weight
     {
@@ -216,11 +279,15 @@ public class NodeVisual<TId, TWeight, TState> : IPartGraph
     public List<EdgeVisual<TId, TWeight, TState>> AdjacentEdges = 
         new List<EdgeVisual<TId, TWeight, TState>>();
 
-    public NodeVisual(TId id, TWeight Weight = default(TWeight), TState State = default(TState))
+    public NodeVisual(TId id,
+                      TWeight Weight = default(TWeight),
+                      TState State = default(TState),
+                      Observer<TId, TWeight, TState>? observer = null)
     {
         Id = id;
         weight = Weight;
         state = State;
+        Observer = observer;
         GetSignal(TypeChange.CreateNode);
     }
 
@@ -250,10 +317,23 @@ public class NodeVisual<TId, TWeight, TState> : IPartGraph
 
     public void GetSignal(TypeChange type)
     {
-        if (flag)
+        if (observer != null)
             observer.AddChange(
                 new Change<List<TId>, TWeight, TState>(
                     type, new List<TId>() { Id }, weight, state));
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj.GetType() != typeof(NodeVisual<TId, TWeight, TState>))
+            return false;
+        var objTypeOfNodeVisual = obj as NodeVisual<TId, TWeight, TState>;
+        return Id.Equals(objTypeOfNodeVisual.Id);
     }
 }
 
@@ -316,11 +396,7 @@ public class Program
         g.Dispose();
         bmp.Dispose();
 
-        var observer = new Observer<int, int, N>();
-        NodeVisual<int, int, N>.observer = observer;
-        EdgeVisual<int, int, N>.observer = observer;
-
-        var graph = new Graph<int, int, N>();
+        var graph = new Graph<int, int, N>(true);
         graph.Nodes.AddNode(new NodeVisual<int, int, N>(0));
         graph.Nodes.AddNode(new NodeVisual<int, int, N>(1));
         graph.Nodes.AddNode(new NodeVisual<int, int, N>(2));
@@ -335,9 +411,7 @@ public class Program
         var firstNode = graph.Nodes[0];
         var secondEdge = graph.Edges[1, 2];
         Algoritms.Alg(graph);
-        NodeVisual<int, int, N>.flag = false;
-        EdgeVisual<int, int, N>.flag = false;
-        var viz = new Visualizator<int, int, N>(observer.changes, ParseColor);
+        var viz = new Visualizator<int, int, N>(graph.GetChanges(), ParseColor);
         viz.StartVisualize();
     }
 
@@ -441,7 +515,8 @@ public class Visualizator<TId, TWeight, TState>
     int size;
     int counterForSave = 0;
     Func<TState, Color> parserColor;
-    
+    Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>> processingByType;
+
 
     public Visualizator(List<Change<List<TId>, TWeight, TState>> changes, Func<TState, Color> parserColor)
     {
@@ -450,6 +525,23 @@ public class Visualizator<TId, TWeight, TState>
         this.parserColor = parserColor;
         dataNodeVisual = new Dictionary<NodeVisual<TId, TWeight, TState>, NodeVisualData>();
         dataEdgeVisual = new Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData>();
+        processingByType = new Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>>()
+        {
+            [TypeChange.CreateNode] = AddNode,
+            [TypeChange.RemoveNode] = RemoveNode,
+            [TypeChange.CreateEdge] = AddEdge,
+            [TypeChange.RemoveEdge] = RemoveEdge,
+
+            [TypeChange.GetNodeWeight] = GetNode,
+            [TypeChange.ChangeNodeWeight] = ChangeNode,
+            [TypeChange.GetNodeState] = GetNode,
+            [TypeChange.ChangeNodeState] = ChangeNode,
+
+            [TypeChange.GetEdgeWeight] = GetEdge,
+            [TypeChange.ChangeEdgeWeight] = ChangeEdge,
+            [TypeChange.GetEdgeState] = GetEdge,
+            [TypeChange.ChangeEdgeState] = ChangeEdge,
+        };
     }
 
     public void StartVisualize()
@@ -490,36 +582,24 @@ public class Visualizator<TId, TWeight, TState>
 
     public IPartGraph? AddChangeInGraph(Change<List<TId>, TWeight, TState> change)
     {
-        var d = new Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>>
-        { 
-            [TypeChange.CreateNode] = AddNode, 
-            [TypeChange.RemoveNode] = RemoveNode,
-            [TypeChange.CreateEdge] = AddEdge,
-            [TypeChange.RemoveEdge] = RemoveEdge,
-
-            [TypeChange.GetNodeWeight] = GetNode,
-            [TypeChange.ChangeNodeWeight] = ChangeNode,
-            [TypeChange.GetNodeState] = GetNode,
-            [TypeChange.ChangeNodeState] = ChangeNode,
-
-            [TypeChange.GetEdgeWeight] = GetEdge,
-            [TypeChange.ChangeEdgeWeight] = ChangeEdge,
-            [TypeChange.GetEdgeState] = GetEdge,
-            [TypeChange.ChangeEdgeState] = ChangeEdge,
-        } ;
-        var result = d[change.TypeChange](change);
+        var result = processingByType[change.TypeChange](change);
         return result;
     }
 
     public IPartGraph? GetEdge(Change<List<TId>, TWeight, TState> change)
-        => visualizedGraph.EdgesDict[Tuple.Create(change.Id[0], change.Id[1])];
+    {
+        return visualizedGraph.Edges[change.Id[0], change.Id[1]];
+    }
 
     public IPartGraph? GetNode(Change<List<TId>, TWeight, TState> change)
-        => visualizedGraph.NodesDict[change.Id[0]];
+    {
+        return visualizedGraph.Nodes[change.Id[0]];
+    }
+        
 
     public IPartGraph? ChangeNode(Change<List<TId>, TWeight, TState> change)
     {
-        var node = visualizedGraph.NodesDict[change.Id[0]];
+        var node = visualizedGraph.Nodes[change.Id[0]];
         node.Weight = change.Weight;
         node.State = change.State;
         return node;
@@ -527,7 +607,7 @@ public class Visualizator<TId, TWeight, TState>
 
     public IPartGraph? ChangeEdge(Change<List<TId>, TWeight, TState> change)
     {
-        var edge = visualizedGraph.EdgesDict[Tuple.Create(change.Id[0], change.Id[1])];
+        var edge = visualizedGraph.Edges[change.Id[0], change.Id[1]];
         edge.Weight = change.Weight;
         edge.State = change.State;
         return edge;
@@ -537,7 +617,7 @@ public class Visualizator<TId, TWeight, TState>
 
     public IPartGraph? RemoveEdge(Change<List<TId>, TWeight, TState> change)
     {
-        var currEdge = visualizedGraph.EdgesDict[Tuple.Create(change.Id[0], change.Id[1])];
+        var currEdge = visualizedGraph.Edges[change.Id[0], change.Id[1]];
         dataEdgeVisual.Remove(currEdge);
         visualizedGraph.Edges.RemoveEdge(currEdge);
         return null;
@@ -545,8 +625,8 @@ public class Visualizator<TId, TWeight, TState>
 
     public IPartGraph? AddEdge(Change<List<TId>, TWeight, TState> change)
     {
-        var start = visualizedGraph.NodesDict[change.Id[0]];
-        var end = visualizedGraph.NodesDict[change.Id[1]];
+        var start = visualizedGraph.Nodes[change.Id[0]];
+        var end = visualizedGraph.Nodes[change.Id[1]];
         var newEdge = start.Connect(end, change.Weight, change.State);
         dataEdgeVisual.Add(newEdge, new EdgeVisualData(dataNodeVisual[start], dataNodeVisual[end]));
         visualizedGraph.Edges.AddEdge(newEdge);
@@ -555,7 +635,7 @@ public class Visualizator<TId, TWeight, TState>
 
     public IPartGraph? RemoveNode(Change<List<TId>, TWeight, TState> change)
     {
-        var currNode = visualizedGraph.NodesDict[change.Id[0]];
+        var currNode = visualizedGraph.Nodes[change.Id[0]];
         dataNodeVisual.Remove(currNode);
         visualizedGraph.Nodes.RemoveNode(currNode);    
         return null;
@@ -594,7 +674,7 @@ public class Visualizator<TId, TWeight, TState>
             if (AmountInsertEdgeIfConnectWithOtherNode(randomX, randomY) > maxAmountEdgeIntersections)
             {
                 Console.WriteLine(maxAmountEdgeIntersections);
-                maxAmountEdgeIntersections += 0.000001;
+                maxAmountEdgeIntersections += 0.1;
                 continue;
             }
             dataNodeVisual.Add(newNode, new NodeVisualData(randomX, randomY));
