@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Graph.Dom
 {
@@ -101,9 +102,19 @@ namespace Graph.Dom
             public void AddEdge(EdgeVisual<TId, TWeight, TState> edge)
             {
                 var IdEdge = Tuple.Create(edge.Start.Id, edge.End.Id);
-                if (!parent.NodesDict.ContainsKey(edge.Start.Id) ||
-                    !parent.NodesDict.ContainsKey(edge.End.Id))
-                    throw new KeyNotFoundException();
+                if (!parent.NodesDict.ContainsKey(edge.Start.Id))
+                {
+                    var addedStartNode = new NodeVisual<TId, TWeight, TState>(edge.Start.Id, edge.Start.Weight,
+                                                                         edge.Start.State, parent.observer);
+                    parent.NodesDict[edge.Start.Id] = addedStartNode;
+                }
+                if (!parent.NodesDict.ContainsKey(edge.End.Id))
+                {
+                    var addedEndNode = new NodeVisual<TId, TWeight, TState>(edge.End.Id, edge.End.Weight,
+                                                                         edge.End.State, parent.observer);
+                    parent.NodesDict[edge.End.Id] = addedEndNode;
+                }
+
                 var startNode = parent.NodesDict[edge.Start.Id];
                 var endNode = parent.NodesDict[edge.End.Id];
                 var addedEdge = new EdgeVisual<TId, TWeight, TState>(startNode, endNode, edge.Weight, edge.State, parent.observer);

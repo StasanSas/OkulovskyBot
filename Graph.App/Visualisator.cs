@@ -46,6 +46,9 @@ namespace Graph.App
                 [TypeChange.ChangeEdgeWeight] = ChangeEdge,
                 [TypeChange.GetEdgeState] = GetEdge,
                 [TypeChange.ChangeEdgeState] = ChangeEdge,
+
+                [TypeChange.UnidentifiedNode] = GetNode,
+                [TypeChange.UnidentifiedEdge] = GetEdge,
             };
         }
 

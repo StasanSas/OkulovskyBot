@@ -19,6 +19,9 @@ namespace Graph.Inf
         RemoveNode,
         AddEdge,
         RemoveEdge,
+
+        UnidentifiedNode,
+        UnidentifiedEdge,
     }
 
 

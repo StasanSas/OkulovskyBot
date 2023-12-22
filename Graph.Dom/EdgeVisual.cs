@@ -1,4 +1,5 @@
-﻿using Graph.Inf;
+﻿using Graph.Dom.Algoritms;
+using Graph.Inf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,6 +72,7 @@ namespace Graph.Dom
             Observer = observer;
             GetSignal(TypeChange.CreateEdge);
         }
+
 
         public void Remove()
         {
