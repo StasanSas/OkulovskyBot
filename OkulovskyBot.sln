@@ -3,9 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33103.184
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OkulovskyBot", "OkulovskyBot\OkulovskyBot.csproj", "{7198F084-295F-4808-B6B5-53A76BC6E8D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OkulovskyBot", "OkulovskyBot\OkulovskyBot.csproj", "{7198F084-295F-4808-B6B5-53A76BC6E8D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{8E5A3592-221D-4BDE-ADA3-FEB74FACB0DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProject", "TestProject\TestProject.csproj", "{8E5A3592-221D-4BDE-ADA3-FEB74FACB0DC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Graph.App", "Graph.App\Graph.App.csproj", "{C93257EB-D489-4E4A-86F7-861265DB63E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Graph.Inf", "Graph.Inf\Graph.Inf.csproj", "{82AFCFBB-B8E8-45A1-B7F4-0ED2ED5966CF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Graph.Dom", "Graph.Dom\Graph.Dom.csproj", "{4218ADD3-0676-4607-B53E-87B97C465F5A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Graph.Int", "Graph\Graph.Int.csproj", "{DFBCAA95-9960-4EB0-B751-209C4B6E35EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +29,22 @@ Global
 		{8E5A3592-221D-4BDE-ADA3-FEB74FACB0DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E5A3592-221D-4BDE-ADA3-FEB74FACB0DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E5A3592-221D-4BDE-ADA3-FEB74FACB0DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C93257EB-D489-4E4A-86F7-861265DB63E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C93257EB-D489-4E4A-86F7-861265DB63E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C93257EB-D489-4E4A-86F7-861265DB63E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C93257EB-D489-4E4A-86F7-861265DB63E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82AFCFBB-B8E8-45A1-B7F4-0ED2ED5966CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82AFCFBB-B8E8-45A1-B7F4-0ED2ED5966CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82AFCFBB-B8E8-45A1-B7F4-0ED2ED5966CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82AFCFBB-B8E8-45A1-B7F4-0ED2ED5966CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4218ADD3-0676-4607-B53E-87B97C465F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4218ADD3-0676-4607-B53E-87B97C465F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4218ADD3-0676-4607-B53E-87B97C465F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4218ADD3-0676-4607-B53E-87B97C465F5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFBCAA95-9960-4EB0-B751-209C4B6E35EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFBCAA95-9960-4EB0-B751-209C4B6E35EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFBCAA95-9960-4EB0-B751-209C4B6E35EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFBCAA95-9960-4EB0-B751-209C4B6E35EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

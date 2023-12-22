@@ -1,7 +1,4 @@
-﻿
-//6597258627:AAH9RFHxr3DD2KYGhH-9fZMYdArCsmp8uVs
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Security.Principal;
 using System.Threading;
@@ -10,10 +7,10 @@ using Telegram.Bot.Requests;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using Graph.Int;
 
-namespace OkulovskyBot
+namespace Graph.Int
 {
-
     public class BaseData
     {
         public List<BuilderImplementation> builder = new List<BuilderImplementation>();
@@ -72,7 +69,7 @@ namespace OkulovskyBot
         public override bool Equals(object? obj)
         {
             if (obj == null) return false;
-            if (obj is Account) 
+            if (obj is Account)
                 return Equals((Account)obj);
             return false;
         }
@@ -105,13 +102,13 @@ namespace OkulovskyBot
         public static InlineKeyboardMarkup GetInlineAddTypeButton()
         {
             return new InlineKeyboardMarkup(
-                new[] 
-                { 
-                    new[] 
-                    { 
+                new[]
+                {
+                    new[]
+                    {
                         InlineKeyboardButton.WithCallbackData("Алгоритм"),
                         InlineKeyboardButton.WithCallbackData("Метод"),
-                        
+
                     },
                     new[]
                     {
@@ -166,10 +163,10 @@ namespace OkulovskyBot
                     ProcessUpdate(update);
                     offset = update.Id + 1;
                 }
-                Thread.Sleep(100);          
-            }         
+                Thread.Sleep(100);
+            }
         }
-       
+
 
         public void ProcessUpdate(Update update)
         {
@@ -180,7 +177,7 @@ namespace OkulovskyBot
             if (accountsData.ContainsKey(account))
             {
                 accountsData[account].Process(update, this);
-            }              
+            }
             else
             {
                 accountsData.Add(account, new StartState());
@@ -215,11 +212,11 @@ namespace OkulovskyBot
         {
             if (update.Message.Text == "/start")
             {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вперёд", 
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вперёд",
                     replyMarkup: Infrastructure.GetMenuButtons());
                 var account = Account.ParseUpdateInAccount(update);
                 bot.accountsData[account] = new BaseState();
-            }         
+            }
             else if (update.Message.Text == "/help")
                 bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "НитЯТУПОЙ");
             else
@@ -247,7 +244,7 @@ namespace OkulovskyBot
             var dictMesedge = new Dictionary<string, (string, IStatusBotVisitor?)>
             {
                 ["Найти решение"] = ("Напишите название искомой реализации", null),
-                ["Добавить решение"] = ("Введите тип реализации", new AddState()) ,
+                ["Добавить решение"] = ("Введите тип реализации", new AddState()),
                 ["Помощь"] = ("Помощь", null),
                 ["Мои реализации"] = ("Поищем", null),
             };
@@ -255,7 +252,7 @@ namespace OkulovskyBot
                 return;
             if (dictMesedge.ContainsKey(update.Message.Text))
             {
-                
+
 
                 bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                     dictMesedge[update.Message.Text].Item1, replyMarkup: Infrastructure.GetProcesButtons());
@@ -268,9 +265,9 @@ namespace OkulovskyBot
                     var account = new Account(update.Message.Chat.FirstName, update.Message.Chat.Id);
                     bot.accountsData[account] = dictMesedge[update.Message.Text].Item2;
                 }
-            }                
+            }
             else
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Не понял вас");               
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Не понял вас");
         }
     }
 
@@ -290,7 +287,7 @@ namespace OkulovskyBot
         public string Code { get; set; }
     }
 
-    
+
 
     public class AddState : IStatusBotVisitor
     {
@@ -337,7 +334,7 @@ namespace OkulovskyBot
             {
                 bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Нажмите кнопку с предложенным вариантом");
                 return;
-            }            
+            }
             builder.typeImplementation = dict[update.CallbackQuery.Data];
             bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Введите имя реализации");
             pointerToSubstate++;
@@ -372,7 +369,7 @@ namespace OkulovskyBot
 
         public InlineKeyboardMarkup GetInlineButton()
         {
-            return new InlineKeyboardMarkup(new [] { new[] { InlineKeyboardButton.WithCallbackData("Подтвердить") } });
+            return new InlineKeyboardMarkup(new[] { new[] { InlineKeyboardButton.WithCallbackData("Подтвердить") } });
         }
 
         public void AddInDataBase(Update update, Bot bot, BuilderImplementation builder)
@@ -384,7 +381,6 @@ namespace OkulovskyBot
             bot.data.SaveToDatabase(builder);
             var account = Account.ParseUpdateInAccount(update);
             bot.accountsData[account] = new BaseState();
-
         }
 
         public void Process(Update update, Bot bot)
@@ -396,7 +392,7 @@ namespace OkulovskyBot
         public bool TryProcessMenu(Update update, Bot bot)
         {
             if (update.Message == null) return false;
-            
+
             if (update.Message.Text == "Помощь")
             {
                 bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Даже Окуловский вам не поможет");
@@ -484,4 +480,3 @@ namespace OkulovskyBot
         }
     }
 }
-

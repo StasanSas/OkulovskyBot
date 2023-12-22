@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Graph.Inf\Graph.Inf.csproj" />
+  </ItemGroup>
+
 </Project>
