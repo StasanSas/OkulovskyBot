@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Graph.Inf\Graph.Inf.csproj" />
+    <ProjectReference Include="..\Graph.App\Graph.App.csproj" />
+    <ProjectReference Include="..\Graph.Dom\Graph.Dom.csproj" />
+    <ProjectReference Include="..\Graph\Graph.Int.csproj" />
   </ItemGroup>
 
 </Project>
