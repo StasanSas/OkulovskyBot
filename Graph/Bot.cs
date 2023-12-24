@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Security.Principal;
 using System.Threading;
@@ -8,6 +8,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Graph.Int;
+using System.Text;
 
 namespace Graph.Int
 {
@@ -15,7 +16,7 @@ namespace Graph.Int
     {
         public List<BuilderImplementation> builder = new List<BuilderImplementation>();
 
-        private string connectionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=Okulovsky242;Integrated Security=True";
+        private string connectionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=Okulovsky100;Integrated Security=True";
 
         private DatabaseHelper databaseHelper;
 
@@ -34,9 +35,14 @@ namespace Graph.Int
             builder = databaseHelper.GetAllBuilderImplementations();
         }
 
-        public BuilderImplementation GetImplementationFromDatabaseByName(string name)
+        public List<BuilderImplementation> GetImplementationsFromDatabaseByName(string name)
         {
-            return databaseHelper.GetBuilderImplementationByName(name);
+            return databaseHelper.GetBuilderImplementationsByName(name);
+        }
+
+        public List<BuilderImplementation> GetMyImplementations(string authorName)
+        {
+            return databaseHelper.GetBuilderImplementationsByAuthorName(authorName);
         }
     }
 
@@ -243,10 +249,10 @@ namespace Graph.Int
         {
             var dictMesedge = new Dictionary<string, (string, IStatusBotVisitor?)>
             {
-                ["Найти решение"] = ("Напишите название искомой реализации", null),
+                ["Найти решение"] = ("Напишите название искомой реализации", new FindState()),
                 ["Добавить решение"] = ("Введите тип реализации", new AddState()),
-                ["Помощь"] = ("Помощь", null),
-                ["Мои реализации"] = ("Поищем", null),
+                ["Помощь"] = ("Как к вам можно обращаться?", new HelpState()),
+                ["Мои реализации"] = ("Поищем...\nПодтвердите, что Вы не робот. Сложите 2+2", new MyState()),
             };
             if (update.Type != UpdateType.Message || update.Message.Text == null)
                 return;
@@ -283,11 +289,44 @@ namespace Graph.Int
     {
         public TypeImplementation typeImplementation { get; set; }
         public string Name { get; set; }
+        public string Author { get; set; }
         public string Description { get; set; }
         public string Code { get; set; }
     }
 
+    public static class ButtonExtensions
+    {
+        public static bool ProcessingWrongMessage(this IStatusBotVisitor button, Update update, Bot bot, UpdateType type, string message)
+        {
+            if (update.Type == UpdateType.Message && update.Message.Text == null)
+                return false;
+            if (update.Type != type)
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message);
+                return true;
+            }
+            return false;
+        }
 
+        public static bool TryProcessMenu(this IStatusBotVisitor button, Update update, Bot bot)
+        {
+            if (update.Message == null) return false;
+
+            if (update.Message.Text == "Помощь")
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Даже Окуловский вам не поможет");
+                return true;
+            }
+            else if (update.Message.Text == "Назад")
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Ну ладно", replyMarkup: Infrastructure.GetMenuButtons());
+                var account = Account.ParseUpdateInAccount(update);
+                bot.accountsData[account] = new BaseState();
+                return true;
+            }
+            return false;
+        }
+    }
 
     public class AddState : IStatusBotVisitor
     {
@@ -307,21 +346,9 @@ namespace Graph.Int
             pointerToSubstate = 0;
         }
 
-        public bool ProcessingWrongMessage(Update update, Bot bot, UpdateType type, string messedge)
-        {
-            if (update.Type == UpdateType.Message && update.Message.Text == null)
-                return false;
-            if (update.Type != type)
-            {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Необходимо ввести название");
-                return true;
-            }
-            return false;
-        }
-
         public void AddType(Update update, Bot bot, BuilderImplementation builder)
         {
-            if (ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "Необходимо ввести тип"))
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "Необходимо ввести тип"))
                 return;
             var dict = new Dictionary<string, TypeImplementation>
             {
@@ -342,7 +369,7 @@ namespace Graph.Int
 
         public void AddName(Update update, Bot bot, BuilderImplementation builder)
         {
-            if (ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название"))
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название"))
                 return;
             builder.Name = update.Message.Text;
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Напишите описание реализации");
@@ -351,7 +378,7 @@ namespace Graph.Int
 
         public void AddDescription(Update update, Bot bot, BuilderImplementation builder)
         {
-            if (ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести описание"))
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести описание"))
                 return;
             builder.Description = update.Message.Text;
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Напишите код реализации");
@@ -360,7 +387,7 @@ namespace Graph.Int
 
         public void AddCode(Update update, Bot bot, BuilderImplementation builder)
         {
-            if (ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести код"))
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести код"))
                 return;
             builder.Code = update.Message.Text;
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Согласны добавить реализацию?", replyMarkup: GetInlineButton());
@@ -374,10 +401,14 @@ namespace Graph.Int
 
         public void AddInDataBase(Update update, Bot bot, BuilderImplementation builder)
         {
-            if (ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "AAA"))
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "AAA"))
                 return;
             if (update.CallbackQuery.Data == "Подтвердить")
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Реализация добавленна в базу", replyMarkup: Infrastructure.GetMenuButtons());
+            {
+                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Реализация добавлена в базу", replyMarkup: Infrastructure.GetMenuButtons());
+                var authorName = $"{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.LastName}";
+                builder.Author = authorName;
+            }   
             bot.data.SaveToDatabase(builder);
             var account = Account.ParseUpdateInAccount(update);
             bot.accountsData[account] = new BaseState();
@@ -385,30 +416,9 @@ namespace Graph.Int
 
         public void Process(Update update, Bot bot)
         {
-            if (!TryProcessMenu(update, bot))
+            if (!this.TryProcessMenu(update, bot))
                 substates[pointerToSubstate](update, bot, builder);
         }
-
-        public bool TryProcessMenu(Update update, Bot bot)
-        {
-            if (update.Message == null) return false;
-
-            if (update.Message.Text == "Помощь")
-            {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Даже Окуловский вам не поможет");
-                return true;
-            }
-            else if (update.Message.Text == "Назад")
-            {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Ну ладно", replyMarkup: Infrastructure.GetMenuButtons());
-                var account = Account.ParseUpdateInAccount(update);
-                bot.accountsData[account] = new BaseState();
-                return true;
-            }
-            return false;
-
-        }
-
     }
 
     public class FindState : IStatusBotVisitor
@@ -422,29 +432,46 @@ namespace Graph.Int
         {
             substates = new List<Action<Update, Bot>>
             {
-                GetImplementationFromDatabase
+                GetImplementationsFromDatabase, RepresentImplementation
             };
             pointerToSubstate = 0;
         }
 
-        public bool ProcessingWrongMessage(Update update, Bot bot, UpdateType type, string message)
+        public void GetImplementationsFromDatabase(Update update, Bot bot)
         {
-            if (update.Type == UpdateType.Message && update.Message.Text == null)
-                return false;
-            if (update.Type != type)
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название реализации"))
+                return;
+
+            var name = update.Message.Text;
+            implementations = bot.data.GetImplementationsFromDatabaseByName(name);
+
+            if (implementations.Count == 0)
             {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message);
-                return true;
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Не удалось найти реализации по указанному названию");
+                return;
             }
-            return false;
+
+            var message = new StringBuilder();
+            message.AppendLine("Вот какие реализации мне удалось найти по Вашему запросу:\n");
+
+            for (var i = 0; i < implementations.Count; i++)
+            {
+                var implementation = implementations[i];
+                message.AppendLine($"{i + 1}. {implementation.Name}, автор: {implementation.Author}");
+            }
+
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
+
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите порядковый номер реализации");
+            pointerToSubstate++;
         }
 
-        public void GetImplementationFromDatabase(Update update, Bot bot)
+        public void RepresentImplementation(Update update, Bot bot)
         {
-            if (ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название реализации"))
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести порядковый номер"))
                 return;
-            var name = update.Message.Text;
-            var implementation = bot.data.GetImplementationFromDatabaseByName(name);
+            var number = int.Parse(update.Message.Text);
+            var implementation = implementations[number - 1];
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"{implementation.Name}\n\n{implementation.Description}\n\n{implementation.Code}");
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вот такая клёвая реализация", replyMarkup: Infrastructure.GetMenuButtons());
@@ -455,28 +482,101 @@ namespace Graph.Int
 
         public void Process(Update update, Bot bot)
         {
-            if (!TryProcessMenu(update, bot))
+            if (!this.TryProcessMenu(update, bot))
                 substates[pointerToSubstate](update, bot);
         }
+    }
 
-        public bool TryProcessMenu(Update update, Bot bot)
+    public class MyState : IStatusBotVisitor
+    {
+        List<Action<Update, Bot>> substates;
+        private List<BuilderImplementation> implementations;
+        int pointerToSubstate;
+
+        public MyState()
         {
-            if (update.Message == null) return false;
-
-            if (update.Message.Text == "Помощь")
+            substates = new List<Action<Update, Bot>>
             {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Даже Окуловский вам не поможет");
-                return true;
-            }
-            else if (update.Message.Text == "Назад")
-            {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Ну ладно", replyMarkup: Infrastructure.GetMenuButtons());
-                var account = Account.ParseUpdateInAccount(update);
-                bot.accountsData[account] = new BaseState();
-                return true;
-            }
-            return false;
+                GetMyImplementations, ShowDefiniteImplementation
+            };
+            pointerToSubstate = 0;
+        }
 
+        public void GetMyImplementations(Update update, Bot bot)
+        {
+            var fullName = $"{update.Message.From.FirstName} {update.Message.From.LastName}";
+                
+            implementations = bot.data.GetMyImplementations(fullName);
+
+            if (implementations.Count == 0)
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вы не сохранили ещё ни одной реализации!");
+                return;
+            }
+
+            var message = new StringBuilder();
+            message.AppendLine("Ваши реализации:\n");
+
+            for (var i = 0; i < implementations.Count; i++)
+            {
+                var implementation = implementations[i];
+                message.AppendLine($"{i + 1}. {implementation.Name}");
+            }
+
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
+
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите порядковый номер реализации");
+            pointerToSubstate++;
+        }
+
+        public void ShowDefiniteImplementation(Update update, Bot bot)
+        {
+            if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести порядковый номер"))
+                return;
+            var number = int.Parse(update.Message.Text);
+            var implementation = implementations[number - 1];
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+                $"{implementation.Name}\n\n{implementation.Description}\n\n{implementation.Code}");
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Спасибо, что пользуетесь нашим ботом!", replyMarkup: Infrastructure.GetMenuButtons());
+            var account = Account.ParseUpdateInAccount(update);
+            bot.accountsData[account] = new BaseState();
+        }
+
+        public void Process(Update update, Bot bot)
+        {
+            if (!this.TryProcessMenu(update, bot))
+                substates[pointerToSubstate](update, bot);
+        }
+    }
+
+    public class HelpState : IStatusBotVisitor
+    {
+        List<Action<Update, Bot>> substates;
+        int pointerToSubstate;
+
+        public HelpState()
+        {
+            substates = new List<Action<Update, Bot>>
+            {
+                Help
+            };
+            pointerToSubstate = 0;
+        }
+
+        public void Help(Update update, Bot bot)
+        {
+            var desiredName = update.Message.Text;
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+                $"{desiredName}, пожалуйста, читайте внимательно то, что написано на кнопках и в последующих инструкциях!\n" +
+                "Юрий Окуловский ценит внимательность!");
+            var account = Account.ParseUpdateInAccount(update);
+            bot.accountsData[account] = new BaseState();
+        }
+
+        public void Process(Update update, Bot bot)
+        {
+            if (!this.TryProcessMenu(update, bot))
+                substates[pointerToSubstate](update, bot);
         }
     }
 }
