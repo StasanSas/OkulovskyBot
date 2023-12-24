@@ -2,6 +2,7 @@
 using System.Collections;
 using Color = System.Drawing.Color;
 using System.Xml.Linq;
+using Graph.Inf;
 
 namespace DrawerGraphs;
 
@@ -689,7 +690,7 @@ public class Visualizator<TId, TWeight, TState>
         foreach (var node in visualizedGraph.Nodes)
         {
             var pointCurrNode = dataNodeVisual[node];
-            var distance = Infrastructure.GetDistance(x, y, pointCurrNode.X, pointCurrNode.Y);
+            var distance = CalculatorDistance.GetDistance(x, y, pointCurrNode.X, pointCurrNode.Y);
             if (distanceMin >= distance)
                 return false;
             if (distance < distanceMax)
@@ -716,7 +717,7 @@ public class Visualizator<TId, TWeight, TState>
                 Console.WriteLine();
                 Console.WriteLine($"{node.Id} {currNode.Id}");
                 Console.WriteLine($"{centerCircusX}, {centerCircusY}, {r}, {x1}, {y1}, {x2}, {y2}");
-                if (Infrastructure.IsCircleIntersectSegment(centerCircusX, centerCircusY, r, x1, y1, x2, y2))
+                if (CalculatorDistance.IsCircleIntersectSegment(centerCircusX, centerCircusY, r, x1, y1, x2, y2))
                     return true;
                 Console.WriteLine();
             }
@@ -736,7 +737,7 @@ public class Visualizator<TId, TWeight, TState>
             {
                 var x3 = dataEdgeVisual[edge].Start.X; var y3 = dataEdgeVisual[edge].Start.Y;
                 var x4 = dataEdgeVisual[edge].End.X; var y4 = dataEdgeVisual[edge].End.Y;
-                if (Infrastructure.IsSegmentIntersectSegment(x1, y1, x2, y2, x3,y3, x4, y4))
+                if (CalculatorDistance.IsSegmentIntersectSegment(x1, y1, x2, y2, x3,y3, x4, y4))
                     counter += 1;
             }
         }
