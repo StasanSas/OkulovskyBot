@@ -372,49 +372,49 @@ class Algoritms
 
 public class Program
 {
-    public static void Main()
-    {
-        Bitmap bmp = new Bitmap(400, 400);
-
-        // Создаем объект Graphics для рисования на изображении
-        Graphics g = Graphics.FromImage(bmp);
-
-        // Рисуем красный квадрат
-        g.FillRectangle(Brushes.Red, 100, 100, 100, 100);
-
-        // Рисуем синий круг
-        g.FillEllipse(Brushes.Blue, 200, 200, 100, 100);
-
-
-        // Рисуем зеленый треугольник
-        Point[] points = { new Point(50, 50), new Point(150, 50), new Point(100, 150) };
-        g.FillPolygon(Brushes.Green, points);
-
-        // Сохраняем изображение в файл
-        bmp.Save("geometric_shapes.png");
-
-        // Освобождаем ресурсы
-        g.Dispose();
-        bmp.Dispose();
-
-        var graph = new Graph<int, int, N>(true);
-        graph.Nodes.AddNode(new NodeVisual<int, int, N>(0));
-        graph.Nodes.AddNode(new NodeVisual<int, int, N>(1));
-        graph.Nodes.AddNode(new NodeVisual<int, int, N>(2));
-        graph.Nodes.AddNode(new NodeVisual<int, int, N>(3));
-        graph.Nodes.AddNode(new NodeVisual<int, int, N>(4));
-        graph.Edges.AddEdge(graph.Nodes[0].Connect(graph.Nodes[1]));
-        graph.Edges.AddEdge(graph.Nodes[1].Connect(graph.Nodes[2]));
-        graph.Edges.AddEdge(graph.Nodes[1].Connect(graph.Nodes[3]));
-        graph.Edges.AddEdge(graph.Nodes[0].Connect(graph.Nodes[4]));
-        graph.Edges.AddEdge(graph.Nodes[2].Connect(graph.Nodes[3]));
-        graph.Edges.AddEdge(graph.Nodes[2].Connect(graph.Nodes[4]));
-        var firstNode = graph.Nodes[0];
-        var secondEdge = graph.Edges[1, 2];
-        Algoritms.Alg(graph);
-        var viz = new Visualizator<int, int, N>(graph.GetChanges(), ParseColor);
-        viz.StartVisualize();
-    }
+    // public static void Main()
+    // {
+    //     Bitmap bmp = new Bitmap(400, 400);
+    //
+    //     // Создаем объект Graphics для рисования на изображении
+    //     Graphics g = Graphics.FromImage(bmp);
+    //
+    //     // Рисуем красный квадрат
+    //     g.FillRectangle(Brushes.Red, 100, 100, 100, 100);
+    //
+    //     // Рисуем синий круг
+    //     g.FillEllipse(Brushes.Blue, 200, 200, 100, 100);
+    //
+    //
+    //     // Рисуем зеленый треугольник
+    //     Point[] points = { new Point(50, 50), new Point(150, 50), new Point(100, 150) };
+    //     g.FillPolygon(Brushes.Green, points);
+    //
+    //     // Сохраняем изображение в файл
+    //     bmp.Save("geometric_shapes.png");
+    //
+    //     // Освобождаем ресурсы
+    //     g.Dispose();
+    //     bmp.Dispose();
+    //
+    //     var graph = new Graph<int, int, N>(true);
+    //     graph.Nodes.AddNode(new NodeVisual<int, int, N>(0));
+    //     graph.Nodes.AddNode(new NodeVisual<int, int, N>(1));
+    //     graph.Nodes.AddNode(new NodeVisual<int, int, N>(2));
+    //     graph.Nodes.AddNode(new NodeVisual<int, int, N>(3));
+    //     graph.Nodes.AddNode(new NodeVisual<int, int, N>(4));
+    //     graph.Edges.AddEdge(graph.Nodes[0].Connect(graph.Nodes[1]));
+    //     graph.Edges.AddEdge(graph.Nodes[1].Connect(graph.Nodes[2]));
+    //     graph.Edges.AddEdge(graph.Nodes[1].Connect(graph.Nodes[3]));
+    //     graph.Edges.AddEdge(graph.Nodes[0].Connect(graph.Nodes[4]));
+    //     graph.Edges.AddEdge(graph.Nodes[2].Connect(graph.Nodes[3]));
+    //     graph.Edges.AddEdge(graph.Nodes[2].Connect(graph.Nodes[4]));
+    //     var firstNode = graph.Nodes[0];
+    //     var secondEdge = graph.Edges[1, 2];
+    //     Algoritms.Alg(graph);
+    //     var viz = new Visualizator<int, int, N>(graph.GetChanges(), ParseColor);
+    //     viz.StartVisualize();
+    // }
 
     public static Color ParseColor(N state)
     {
