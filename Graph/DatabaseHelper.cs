@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using Dapper;
@@ -20,7 +20,7 @@ namespace Graph.Int
             {
                 connection.Open();
 
-                var createDatabaseQuery = "CREATE DATABASE Okulovsky2425";
+                var createDatabaseQuery = "CREATE DATABASE Okulovsky100";
 
                 connection.Execute(createDatabaseQuery);
             }
@@ -37,6 +37,7 @@ namespace Graph.Int
                     Id INT IDENTITY(1,1) PRIMARY KEY,
                     TypeImplementation INT,
                     Name NVARCHAR(100),
+                    Author NVARCHAR(100) DEFAULT 'YuriOkulovsky',
                     Description NVARCHAR(255),
                     Code NVARCHAR(MAX)
                 )";
@@ -52,8 +53,8 @@ namespace Graph.Int
                 connection.Open();
 
                 var insertQuery = @"
-                INSERT INTO BuilderImplementationDDD (TypeImplementation, Name, Description, Code)
-                VALUES (@TypeImplementation, @Name, @Description, @Code)";
+                INSERT INTO BuilderImplementationDDD (TypeImplementation, Name, Author, Description, Code)
+                VALUES (@TypeImplementation, @Name, @Author, @Description, @Code)";
 
                 connection.Execute(insertQuery, builderImplementation);
             }
@@ -80,6 +81,30 @@ namespace Graph.Int
                 var selectQuery = "SELECT * FROM BuilderImplementationDDD WHERE Name = @ImplementationName";
 
                 return connection.QueryFirstOrDefault<BuilderImplementation>(selectQuery, new { ImplementationName = implementationName });
+            }
+        }
+
+        public List<BuilderImplementation> GetBuilderImplementationsByName(string implementationName)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var selectQuery = "SELECT * FROM BuilderImplementationDDD WHERE Name LIKE '%' + @ImplementationName + '%'";
+
+                return connection.Query<BuilderImplementation>(selectQuery, new { ImplementationName = implementationName }).ToList();
+            }
+        }
+
+        public List<BuilderImplementation> GetBuilderImplementationsByAuthorName(string authorName)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var selectQuery = "SELECT * FROM BuilderImplementationDDD WHERE Author LIKE '%' + @AuthorName + '%'";
+
+                return connection.Query<BuilderImplementation>(selectQuery, new { AuthorName = authorName }).ToList();
             }
         }
     }
