@@ -37,4 +37,14 @@ public class Tests
         Assert.That(graph.Edges["1", "2"].Weight, Is.EqualTo(7));
         Assert.That(graph.Edges["2", "1"].Weight, Is.EqualTo(1));
     }
+    
+    [Test]
+    public void SimpleCreationTest()
+    {
+        var graph = GraphCreator.GetParsedGraph(" 1 : 2   \n2 :");
+        Assert.That(graph.Nodes.Count(), Is.EqualTo(2));
+        Assert.That(graph.Nodes["1"].Weight, Is.EqualTo(0));
+        Assert.That(graph.Nodes["2"].Weight, Is.EqualTo(0));
+        Assert.That(graph.Edges["1", "2"].Weight, Is.EqualTo(0));
+    }
 }
