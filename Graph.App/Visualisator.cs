@@ -15,11 +15,9 @@ namespace Graph.App
     {
         Graph<TId, TWeight, TState> visualizedGraph;
         List<Change<List<TId>, TWeight, TState>> changes;
-        Bitmap bmp;
         Dictionary<NodeVisual<TId, TWeight, TState>, NodeVisualData> dataNodeVisual;
         Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData> dataEdgeVisual;
         int size;
-        int counterForSave = 0;
         Func<TState, Color> parserColor;
         Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>> processingByType;
 
@@ -53,7 +51,7 @@ namespace Graph.App
             };
         }
 
-        public void StartVisualize()
+        public void StartVisualize(int delay, string outputPath)
         {
 
             var counterObject = GetCounterObjectInGraph(changes);
@@ -62,14 +60,22 @@ namespace Graph.App
             EdgeVisualData.Weight = (size / (10 * counterObject)) + 1;
             using (var magickImages = new MagickImageCollection())
             {
+                foreach (var change in changes)
+                {
+                    var bmp = new Bitmap(size, size);
+                    IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
+                    var pictureStep = DrawGraph(changeOnlyOnThisStep, bmp);
 
-            }
+                    ImageConverter converter = new ImageConverter();
+                    byte[] imageBytes = (byte[])converter.ConvertTo(pictureStep, typeof(byte[]));
 
-            foreach (var change in changes)
-            {
-                bmp = new Bitmap(size, size);
-                IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
-                DrawGraph(changeOnlyOnThisStep);
+                    var magickImage = new MagickImage(imageBytes);
+                    magickImage.AnimationDelay = delay;
+                    magickImages.Add(magickImage);
+                    bmp.Dispose();
+                }
+                // Сохранение гифки
+                magickImages.Write(outputPath);
             }
         }
 
@@ -252,7 +258,7 @@ namespace Graph.App
 
 
 
-        public void DrawGraph(IPartGraph changeOnlyOnThisStep)
+        public Bitmap DrawGraph(IPartGraph changeOnlyOnThisStep, Bitmap bmp)
         {
 
             var g = Graphics.FromImage(bmp);
@@ -260,10 +266,7 @@ namespace Graph.App
                 DrawEdge(edge, changeOnlyOnThisStep, g);
             foreach (var node in visualizedGraph.Nodes)
                 DrawNode(node, changeOnlyOnThisStep, g);
-            bmp.Save($"graph_shapes{counterForSave}.png");
-            counterForSave += 1;
-            g.Dispose();
-            bmp.Dispose();
+            return bmp;
         }
 
         public void DrawEdge(EdgeVisual<TId, TWeight, TState> edge, IPartGraph changeOnlyOnThisStep, Graphics g)
