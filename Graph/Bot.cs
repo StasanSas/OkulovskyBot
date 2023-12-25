@@ -98,7 +98,7 @@ namespace Graph.Int
                 new List<List<KeyboardButton>>
                 {
                     new List<KeyboardButton> { new KeyboardButton("Найти решение"), new KeyboardButton("Добавить решение")},
-                    new List<KeyboardButton> { new KeyboardButton("Помощь"), new KeyboardButton("Мои реализации") }
+                    new List<KeyboardButton> { new KeyboardButton("Визуализировать граф"), new KeyboardButton("Мои реализации") }
                 }
 
             );
@@ -251,7 +251,8 @@ namespace Graph.Int
             {
                 ["Найти решение"] = ("Напишите название искомой реализации", new FindState()),
                 ["Добавить решение"] = ("Введите тип реализации", new AddState()),
-                ["Помощь"] = ("Как к вам можно обращаться?", new HelpState()),
+                ["Визуализировать граф"] = ("Выберите алгоритм для визуализации:\n1. Алгоритм Дейкстры\n2. Алгоритм Краскала", 
+                new VisualizeState()),
                 ["Мои реализации"] = ("Поищем...\nПодтвердите, что Вы не робот. Сложите 2+2", new MyState()),
             };
             if (update.Type != UpdateType.Message || update.Message.Text == null)
@@ -549,26 +550,47 @@ namespace Graph.Int
         }
     }
 
-    public class HelpState : IStatusBotVisitor
+    public class VisualizeState : IStatusBotVisitor
     {
         List<Action<Update, Bot>> substates;
         int pointerToSubstate;
 
-        public HelpState()
+        public VisualizeState()
         {
             substates = new List<Action<Update, Bot>>
             {
-                Help
+                ChooseAlgorithm
             };
             pointerToSubstate = 0;
         }
 
-        public void Help(Update update, Bot bot)
+        public void ChooseAlgorithm(Update update, Bot bot)
         {
-            var desiredName = update.Message.Text;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
-                $"{desiredName}, пожалуйста, читайте внимательно то, что написано на кнопках и в последующих инструкциях!\n" +
-                "Юрий Окуловский ценит внимательность!");
+            var desiredAlgorithm = int.Parse(update.Message.Text);
+
+            if (desiredAlgorithm == 1)
+            {
+                // Алгоритм Дейкстры
+            }
+
+            if (desiredAlgorithm == 2)
+            {
+                // Алгоритм Краскала
+            }
+
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите cписки смежности");
+            pointerToSubstate++;
+        }
+
+        public void GetAdjacencyLists(Update update, Bot bot)
+        {
+            // TODO
+            pointerToSubstate++;
+        }
+
+        public void Visualize(Update update, Bot bot)
+        {
+            // TODO
             var account = Account.ParseUpdateInAccount(update);
             bot.accountsData[account] = new BaseState();
         }
