@@ -13,10 +13,10 @@ public class InputDataParser
     
     public GraphCreationData Parse()
     {
-        return RequestParser(request);
+        return ParseRequest(request);
     }
 
-    private GraphCreationData RequestParser(String request)
+    private GraphCreationData ParseRequest(String request)
     {
         var nodesInfo = new List<NodeInfo>();
         var edgesInfo = new List<EdgeInfo>();
@@ -40,13 +40,18 @@ public class InputDataParser
 
     private record EdgesInfo(List<EdgeInfo> EdgeInfos)
     {
-        private static readonly string EdgeInfoPattern = @"^( *\d+ *[eE]\d+ *)+$";
+        private static readonly string FullEdgeInfoPattern = @"^( *\d+ *[eE]\d+ *)+$";
+        private static readonly string EdgeInfoPattern = @"^( *\d+ *)+$";
         
         public static EdgesInfo Create(String startNode,
             string stringIncidentNodesData)
         {
             var edgeInfos = new List<EdgeInfo>();
-            var match = Regex.Match(stringIncidentNodesData, EdgeInfoPattern);
+            var match = Regex.Match(stringIncidentNodesData, FullEdgeInfoPattern);
+            if (!match.Success)
+            {
+                match = Regex.Match(stringIncidentNodesData, EdgeInfoPattern);
+            }
             var groupsCount = match.Groups.Count;
             for (var i = 1; i < groupsCount; i++)
             {
@@ -56,36 +61,46 @@ public class InputDataParser
         }
     }
     
-    public record EdgeInfo(string FirstNodeName, string SecondNodeName, int? Weight)
+    public record EdgeInfo(string FirstNodeName, string SecondNodeName, int Weight)
     {
         private static readonly string NameWeightPattern = @"^ *(\d+) *[eE](\d+) *$";
+        private static readonly string NamePattern = @"^ *(\d+) *$";
         public static EdgeInfo Create(string firstNodeName, string inputString)
         {
             var match = Regex.Match(inputString, NameWeightPattern);
             if (!match.Success)
             {
-                throw new ArgumentException("Incorrect input for node name or weight");
+                match = Regex.Match(inputString, NamePattern);
             }
-            var nodeId = match.Groups[1].ToString();
-            int? nodeWeight = match.Groups.Count < 3 ?
-                null : int.Parse(match.Groups[2].ToString());
-            return new EdgeInfo(firstNodeName, nodeId, nodeWeight);
-        }
-    }
-
-    public record NodeInfo(String Name, int? Weight)
-    {
-        private static readonly String NameWeightPattern = @"^ *(\d+) *[wW](\d+) *$";
-        public static NodeInfo Create(String inputString)
-        {
-            Match match = Regex.Match(inputString, NameWeightPattern);
             if (!match.Success)
             {
                 throw new ArgumentException("Incorrect input for node name or weight");
             }
             var nodeId = match.Groups[1].ToString();
-            int? nodeWeight = match.Groups.Count < 3 ?
-                null : int.Parse(match.Groups[2].ToString());
+            int nodeWeight = match.Groups.Count < 3 ?
+                0 : int.Parse(match.Groups[2].ToString());
+            return new EdgeInfo(firstNodeName, nodeId, nodeWeight);
+        }
+    }
+
+    public record NodeInfo(String Name, int Weight)
+    {
+        private static readonly String FullNameWeightPattern = @"^ *(\d+) *[wW](\d+) *$";
+        private static readonly String NameWeightPattern = @"^ *(\d+) *$";
+        public static NodeInfo Create(String inputString)
+        {
+            Match match = Regex.Match(inputString, FullNameWeightPattern);
+            if (!match.Success)
+            {
+                match = Regex.Match(inputString, NameWeightPattern);
+            }
+            if (!match.Success)
+            {
+                throw new ArgumentException("Incorrect input for node name or weight");
+            }
+            var nodeId = match.Groups[1].ToString();
+            int nodeWeight = match.Groups.Count < 3 ?
+                0 : int.Parse(match.Groups[2].ToString());
             return new NodeInfo(nodeId, nodeWeight);
         }
     }
