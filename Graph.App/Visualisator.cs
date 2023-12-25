@@ -1,5 +1,6 @@
 ﻿using Graph.Dom;
 using Graph.Inf;
+using ImageMagick;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -59,6 +60,11 @@ namespace Graph.App
             size = (int)(200 * Math.Sqrt(counterObject));
             NodeVisualData.Radius = (size / (counterObject)) + 1;
             EdgeVisualData.Weight = (size / (10 * counterObject)) + 1;
+            using (var magickImages = new MagickImageCollection())
+            {
+
+            }
+
             foreach (var change in changes)
             {
                 bmp = new Bitmap(size, size);
@@ -248,6 +254,7 @@ namespace Graph.App
 
         public void DrawGraph(IPartGraph changeOnlyOnThisStep)
         {
+
             var g = Graphics.FromImage(bmp);
             foreach (var edge in visualizedGraph.Edges)
                 DrawEdge(edge, changeOnlyOnThisStep, g);
