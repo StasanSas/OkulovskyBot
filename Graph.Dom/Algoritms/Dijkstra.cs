@@ -1,6 +1,7 @@
 ﻿using Graph.Inf;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 
 namespace Graph.Dom.Algoritms
 {
+
 
     public enum N
     {
@@ -18,6 +20,16 @@ namespace Graph.Dom.Algoritms
 
     public static class Dijkstra
     {
+        public static Color DefineColor(N elem)
+        {
+            switch (elem)
+            {
+                case N.None : return Color.FloralWhite;
+                case N.Track : return Color.Crimson;
+                default: return Color.White;
+            }
+        }
+        
         public static Graph<string, int, N>  Algoritm(Graph<string, int, N> graph, string start, string end)
         {
             var notVisited = graph.Nodes.ToList();

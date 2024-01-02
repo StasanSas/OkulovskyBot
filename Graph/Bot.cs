@@ -587,9 +587,11 @@ namespace Graph.Int
             if (desiredAlgorithm == 1)
             {
                 // Dijkstra
-                var graph = GraphCreator.GetParsedGraph<N>(update.Message.Text);
-                var changes = Dijkstra.GetObserverForGraph(graph, graph.Nodes.First().Id, graph.Nodes.Last().Id);
-
+                var graph = GraphCreator.GetParsedGraph<N>(update.Message.Text, true);
+                var changes = Dijkstra.GetObserverForGraph(graph,
+                    graph.Nodes.First().Id,graph.Nodes.Last().Id);
+                var vis = new Visualizator<string, int, N>(changes, Dijkstra.DefineColor);
+                CreateGifAndSendToUser(update, bot, vis);
             }
             if (desiredAlgorithm == 2)
             {
@@ -598,31 +600,25 @@ namespace Graph.Int
                 var changes = Krascal.GetObserverForGraph(graph);
                 var vis = new Visualizator<string, int, State>(changes,
                     (state) => ColorTranslator.FromHtml(state.ToString()));
-                var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
-                var path = Path.Combine(projectDirectory, "Gifs\\" + update.Message.Chat.Id.GetHashCode() + ".gif");
-                if (!System.IO.File.Exists(path))
-                {
-                    System.IO.File.Create(path).Close();
-                }
-                vis.StartVisualize(10, path);
-                using (Stream stream = System.IO.File.OpenRead(path))
-                {
-                    bot.botTelegram.SendAnimationAsync(
-                        chatId: update.Message.Chat.Id,
-                        animation: new InputFileStream(stream, fileName: path));
-                }
+                CreateGifAndSendToUser(update, bot, vis);
             }
-           
-
-            // pointerToSubstate++;
         }
 
-        // public void Visualize(graph)
-        // {
-        //     // TODO
-        //     // var account = Account.ParseUpdateInAccount(update);
-        //     // bot.accountsData[account] = new BaseState();
-        // }
+        private void CreateGifAndSendToUser<TId, TWeight, TState>(Update update, Bot bot, Visualizator<TId, TWeight, TState> vis)
+        {
+            var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
+            var path = Path.Combine(projectDirectory, "Gifs\\" + update.Message.Chat.Id.GetHashCode() + ".gif");
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+            }
+            System.IO.File.Create(path).Close();
+            vis.StartVisualize(25, path);
+            using Stream stream = System.IO.File.OpenRead(path);
+            bot.botTelegram.SendAnimationAsync(
+                chatId: update.Message.Chat.Id,
+                animation: new InputFileStream(stream, fileName: path));
+        }
 
         public void Process(Update update, Bot bot)
         {

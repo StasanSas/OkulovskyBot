@@ -4,9 +4,9 @@ namespace OkulovskyBot;
 
 public static class GraphCreator
 {
-    public static Graph<string, int, TState> GetParsedGraph<TState>(string inputGraphInfo)
+    public static Graph<string, int, TState> GetParsedGraph<TState>(string inputGraphInfo, bool withObserver = false)
     {
-        var graph = new Graph<string, int, TState>();
+        var graph = new Graph<string, int, TState>(withObserver);
         var graphData = new InputDataParser(inputGraphInfo).Parse();
         foreach (var nodeInfo in graphData.NodesInfo)
         {
