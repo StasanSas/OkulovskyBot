@@ -1,5 +1,4 @@
-﻿using Graph.Int;
-namespace OkulovskyBot;
+﻿namespace Graph.Int;
 
 public class DONT_CREATE_ANOTHER_MAIN_PLS
 {

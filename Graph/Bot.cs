@@ -9,6 +9,8 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Graph.Int;
 using System.Text;
+using OkulovskyBot;
+using Graph.Dom.Algoritms;
 
 namespace Graph.Int
 {
@@ -554,12 +556,14 @@ namespace Graph.Int
     {
         List<Action<Update, Bot>> substates;
         int pointerToSubstate;
+        // private IGraphAlgorithm<Enum> _graphAlgorithm;
 
         public VisualizeState()
         {
             substates = new List<Action<Update, Bot>>
             {
-                ChooseAlgorithm
+                ChooseAlgorithm,
+                GetAdjacencyLists
             };
             pointerToSubstate = 0;
         }
@@ -584,8 +588,10 @@ namespace Graph.Int
 
         public void GetAdjacencyLists(Update update, Bot bot)
         {
-            // TODO
-            pointerToSubstate++;
+            if (update.Message.Text == null)
+                return;
+            var graph = GraphCreator.GetParsedGraph(update.Message.Text);
+            // pointerToSubstate++;
         }
 
         public void Visualize(Update update, Bot bot)
