@@ -2,6 +2,11 @@ namespace TestProject;
 
 public class Tests
 {
+    private enum TestEnum
+    {
+        
+    }
+    
     [SetUp]
     public void Setup()
     {
@@ -11,7 +16,7 @@ public class Tests
     [Test]
     public void FullNameWeightPatternTest()
     {
-        var graph = GraphCreator.GetParsedGraph("1 w6 : 2 e7\n2 w5 : 1 e1");
+        var graph = GraphCreator.GetParsedGraph<TestEnum>("1 w6 : 2 e7\n2 w5 : 1 e1");
         Assert.That(graph.Nodes["1"].Weight, Is.EqualTo(6));
         Assert.That(graph.Nodes["2"].Weight, Is.EqualTo(5));
         Assert.That(graph.Edges["1", "2"].Weight, Is.EqualTo(7));
@@ -21,7 +26,7 @@ public class Tests
     [Test]
     public void OnlyNodeWeightTest()
     {
-        var graph = GraphCreator.GetParsedGraph("1 w6 : 2\n2 w5 : 1");
+        var graph = GraphCreator.GetParsedGraph<TestEnum>("1 w6 : 2\n2 w5 : 1");
         Assert.That(graph.Nodes["1"].Weight, Is.EqualTo(6));
         Assert.That(graph.Nodes["2"].Weight, Is.EqualTo(5));
         Assert.That(graph.Edges["1", "2"].Weight, Is.EqualTo(0));
@@ -31,7 +36,7 @@ public class Tests
     [Test]
     public void OnlyEdgeWeightTest()
     {
-        var graph = GraphCreator.GetParsedGraph("1 : 2 e7\n2 : 1 e1");
+        var graph = GraphCreator.GetParsedGraph<TestEnum>("1 : 2 e7\n2 : 1 e1");
         Assert.That(graph.Nodes["1"].Weight, Is.EqualTo(0));
         Assert.That(graph.Nodes["2"].Weight, Is.EqualTo(0));
         Assert.That(graph.Edges["1", "2"].Weight, Is.EqualTo(7));
@@ -41,7 +46,7 @@ public class Tests
     [Test]
     public void SimpleCreationTest()
     {
-        var graph = GraphCreator.GetParsedGraph(" 1 : 2   \n2 :");
+        var graph = GraphCreator.GetParsedGraph<TestEnum>(" 1 : 2   \n2 :");
         Assert.That(graph.Nodes.Count(), Is.EqualTo(2));
         Assert.That(graph.Nodes["1"].Weight, Is.EqualTo(0));
         Assert.That(graph.Nodes["2"].Weight, Is.EqualTo(0));

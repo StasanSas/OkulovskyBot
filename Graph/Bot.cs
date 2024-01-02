@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Security.Principal;
 using System.Threading;
 using Telegram.Bot;
@@ -9,8 +10,11 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Graph.Int;
 using System.Text;
+using Graph.App;
 using OkulovskyBot;
 using Graph.Dom.Algoritms;
+using System.IO;
+using File = Telegram.Bot.Types.File;
 
 namespace Graph.Int
 {
@@ -556,7 +560,7 @@ namespace Graph.Int
     {
         List<Action<Update, Bot>> substates;
         int pointerToSubstate;
-        // private IGraphAlgorithm<Enum> _graphAlgorithm;
+        private int desiredAlgorithm;
 
         public VisualizeState()
         {
@@ -570,36 +574,55 @@ namespace Graph.Int
 
         public void ChooseAlgorithm(Update update, Bot bot)
         {
-            var desiredAlgorithm = int.Parse(update.Message.Text);
-
-            if (desiredAlgorithm == 1)
-            {
-                // Алгоритм Дейкстры
-            }
-
-            if (desiredAlgorithm == 2)
-            {
-                // Алгоритм Краскала
-            }
-
+            desiredAlgorithm = int.Parse(update.Message.Text);
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите cписки смежности");
             pointerToSubstate++;
         }
 
-        public void GetAdjacencyLists(Update update, Bot bot)
+        public void  GetAdjacencyLists(Update update, Bot bot)
         {
             if (update.Message.Text == null)
                 return;
-            var graph = GraphCreator.GetParsedGraph(update.Message.Text);
+            
+            if (desiredAlgorithm == 1)
+            {
+                // Dijkstra
+                var graph = GraphCreator.GetParsedGraph<N>(update.Message.Text);
+                var changes = Dijkstra.GetObserverForGraph(graph, graph.Nodes.First().Id, graph.Nodes.Last().Id);
+
+            }
+            if (desiredAlgorithm == 2)
+            {
+                // Kraskal
+                var graph = GraphCreator.GetParsedGraph<State>(update.Message.Text);
+                var changes = Krascal.GetObserverForGraph(graph);
+                var vis = new Visualizator<string, int, State>(changes,
+                    (state) => ColorTranslator.FromHtml(state.ToString()));
+                var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
+                var path = Path.Combine(projectDirectory, "Gifs\\" + update.Message.Chat.Id.GetHashCode() + ".gif");
+                if (!System.IO.File.Exists(path))
+                {
+                    System.IO.File.Create(path).Close();
+                }
+                vis.StartVisualize(10, path);
+                using (Stream stream = System.IO.File.OpenRead(path))
+                {
+                    bot.botTelegram.SendAnimationAsync(
+                        chatId: update.Message.Chat.Id,
+                        animation: new InputFileStream(stream, fileName: path));
+                }
+            }
+           
+
             // pointerToSubstate++;
         }
 
-        public void Visualize(Update update, Bot bot)
-        {
-            // TODO
-            var account = Account.ParseUpdateInAccount(update);
-            bot.accountsData[account] = new BaseState();
-        }
+        // public void Visualize(graph)
+        // {
+        //     // TODO
+        //     // var account = Account.ParseUpdateInAccount(update);
+        //     // bot.accountsData[account] = new BaseState();
+        // }
 
         public void Process(Update update, Bot bot)
         {
