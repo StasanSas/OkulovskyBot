@@ -22,7 +22,7 @@ namespace Graph.Int
     {
         public List<BuilderImplementation> builder = new List<BuilderImplementation>();
 
-        private string connectionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=Okulovsky100;Integrated Security=True";
+        private string connectionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=Okulovsky2024;Integrated Security=True";
 
         private DatabaseHelper databaseHelper;
 
@@ -33,6 +33,9 @@ namespace Graph.Int
 
         public void SaveToDatabase(BuilderImplementation implementation)
         {
+            //databaseHelper.CreateDatabase();
+            //databaseHelper.CreateTableForImplementations();
+            //databaseHelper.CreateTableForReactions(
             databaseHelper.InsertBuilderImplementation(implementation);
         }
 
@@ -49,6 +52,11 @@ namespace Graph.Int
         public List<BuilderImplementation> GetMyImplementations(string authorName)
         {
             return databaseHelper.GetBuilderImplementationsByAuthorName(authorName);
+        }
+
+        public Reactions GetReactionsById(int id)
+        {
+            return databaseHelper.GetReactionsById(id);
         }
     }
 
@@ -255,7 +263,7 @@ namespace Graph.Int
         {
             var dictMesedge = new Dictionary<string, (string, IStatusBotVisitor?)>
             {
-                ["Найти решение"] = ("Напишите название искомой реализации", new FindState()),
+                ["Найти решение"] = ("Введите название реализации:", new FindState()),
                 ["Добавить решение"] = ("Введите тип реализации", new AddState()),
                 ["Визуализировать граф"] = ("Выберите алгоритм для визуализации:\n1. Алгоритм Дейкстры\n2. Алгоритм Краскала", 
                 new VisualizeState()),
@@ -294,11 +302,18 @@ namespace Graph.Int
 
     public class BuilderImplementation
     {
+        public int Id { get; set; }
         public TypeImplementation typeImplementation { get; set; }
         public string Name { get; set; }
         public string Author { get; set; }
         public string Description { get; set; }
         public string Code { get; set; }
+    }
+
+    public class Reactions
+    {
+        public int Likes { get; set; }
+        public int Dislikes { get; set; }
     }
 
     public static class ButtonExtensions
@@ -413,8 +428,8 @@ namespace Graph.Int
             if (update.CallbackQuery.Data == "Подтвердить")
             {
                 bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Реализация добавлена в базу", replyMarkup: Infrastructure.GetMenuButtons());
-                var authorName = $"{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.LastName}";
-                builder.Author = authorName;
+                // var authorName = $"{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.LastName}";
+                builder.Author = "Yuri Okulovsky";
             }   
             bot.data.SaveToDatabase(builder);
             var account = Account.ParseUpdateInAccount(update);
@@ -459,7 +474,7 @@ namespace Graph.Int
             }
 
             var message = new StringBuilder();
-            message.AppendLine("Вот какие реализации мне удалось найти по Вашему запросу:\n");
+            message.AppendLine("Вот что мне удалось найти по Вашему запросу:\n");
 
             for (var i = 0; i < implementations.Count; i++)
             {
@@ -467,10 +482,19 @@ namespace Graph.Int
                 message.AppendLine($"{i + 1}. {implementation.Name}, автор: {implementation.Author}");
             }
 
+            message.AppendLine("\nВ ответном сообщении напишите порядковый номер, и я поделюсь всей информацией по данной реализации!");
+
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
 
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите порядковый номер реализации");
             pointerToSubstate++;
+        }
+
+        public InlineKeyboardMarkup GetReactionButtons(Reactions reactions)
+        {
+            return new InlineKeyboardMarkup(
+                new[] { new[] { InlineKeyboardButton.WithCallbackData($"{reactions.Likes} likes"), 
+                InlineKeyboardButton.WithCallbackData($"{reactions.Dislikes} dislikes"),
+                InlineKeyboardButton.WithCallbackData("Next variant")}});
         }
 
         public void RepresentImplementation(Update update, Bot bot)
@@ -479,8 +503,11 @@ namespace Graph.Int
                 return;
             var number = int.Parse(update.Message.Text);
             var implementation = implementations[number - 1];
+            var reactions = bot.data.GetReactionsById(implementation.Id);
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
-                $"{implementation.Name}\n\n{implementation.Description}\n\n{implementation.Code}");
+                $"{implementation.Name}\n\n{implementation.Description}");
+            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+                $"```\n{implementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetReactionButtons(reactions));
             bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вот такая клёвая реализация", replyMarkup: Infrastructure.GetMenuButtons());
             var account = Account.ParseUpdateInAccount(update);
             bot.accountsData[account] = new BaseState();
