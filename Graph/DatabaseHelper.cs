@@ -20,13 +20,13 @@ namespace Graph.Int
             {
                 connection.Open();
 
-                var createDatabaseQuery = "CREATE DATABASE Okulovsky100";
+                var createDatabaseQuery = "CREATE DATABASE Okulovsky2024";
 
                 connection.Execute(createDatabaseQuery);
             }
         }
 
-        public void CreateTable()
+        public void CreateTableForImplementations()
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -46,6 +46,23 @@ namespace Graph.Int
             }
         }
 
+        public void CreateTableForReactions()
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var createTableQuery = @"
+                CREATE TABLE ReactionsDDD (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Likes INT DEFAULT 0,
+                    Dislikes INT DEFAULT 0
+                )";
+
+                connection.Execute(createTableQuery);
+            }
+        }
+
         public void InsertBuilderImplementation(BuilderImplementation builderImplementation)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -53,8 +70,11 @@ namespace Graph.Int
                 connection.Open();
 
                 var insertQuery = @"
-                INSERT INTO BuilderImplementationDDD (TypeImplementation, Name, Author, Description, Code)
-                VALUES (@TypeImplementation, @Name, @Author, @Description, @Code)";
+                    INSERT INTO BuilderImplementationDDD (TypeImplementation, Name, Author, Description, Code)
+                    VALUES (@TypeImplementation, @Name, @Author, @Description, @Code);
+
+                    INSERT INTO ReactionsDDD (Likes, Dislikes)
+                    VALUES (0, 0)";
 
                 connection.Execute(insertQuery, builderImplementation);
             }
@@ -105,6 +125,21 @@ namespace Graph.Int
                 var selectQuery = "SELECT * FROM BuilderImplementationDDD WHERE Author LIKE '%' + @AuthorName + '%'";
 
                 return connection.Query<BuilderImplementation>(selectQuery, new { AuthorName = authorName }).ToList();
+            }
+        }
+
+        public Reactions GetReactionsById(int id)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var selectQuery = @"
+                    SELECT Likes, Dislikes
+                    FROM ReactionsDDD
+                    WHERE Id = @Id";
+
+                return connection.QuerySingleOrDefault<Reactions>(selectQuery, new { Id = id });
             }
         }
     }
