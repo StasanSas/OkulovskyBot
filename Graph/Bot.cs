@@ -14,6 +14,7 @@ using Graph.App;
 using OkulovskyBot;
 using Graph.Dom.Algoritms;
 using System.IO;
+using Graph.Dom;
 using File = Telegram.Bot.Types.File;
 
 namespace Graph.Int
@@ -588,6 +589,7 @@ namespace Graph.Int
         List<Action<Update, Bot>> substates;
         int pointerToSubstate;
         private int desiredAlgorithm;
+        private static HashSet<int> possibleAlgIndexes = new HashSet<int>() { 1, 2 };
 
         public VisualizeState()
         {
@@ -599,14 +601,34 @@ namespace Graph.Int
             pointerToSubstate = 0;
         }
 
-        public void ChooseAlgorithm(Update update, Bot bot)
+        private async void ChooseAlgorithm(Update update, Bot bot)
         {
-            desiredAlgorithm = int.Parse(update.Message.Text);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите cписки смежности");
+            try
+            {
+                desiredAlgorithm = int.Parse(update.Message.Text);
+            }
+            catch (FormatException e)
+            {
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Для указания алгоритма используйте только его номер");
+                return;
+            }
+            if (!possibleAlgIndexes.Contains(desiredAlgorithm))
+            {
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Алгоритма с таким номером не существует");
+                return;
+            }
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите cписки смежности");
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Они указываются в формате\n" +
+                                                                              "Номер вершины 'w'вес вершины ':' пары вида: номер вершины 'e'вес ребра\n" +
+                                                                              "Указание веса вершин и ребер необязательны");
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Пример корректного ввода\n" +
+                                                                              "1 w42 : 2\n" +
+                                                                              "2 w20 : 1\n" +
+                                                                              "Создает граф с двунаправленным ребром 1-2, где вес 1 равен 42, а вес 2 равен 20");
             pointerToSubstate++;
         }
 
-        public void  GetAdjacencyLists(Update update, Bot bot)
+        private void  GetAdjacencyLists(Update update, Bot bot)
         {
             if (update.Message.Text == null)
                 return;
@@ -615,6 +637,10 @@ namespace Graph.Int
             {
                 // Dijkstra
                 var graph = GraphCreator.GetParsedGraph<N>(update.Message.Text, true);
+                if (SendIfIncorrectGraphData(update, bot, graph))
+                {
+                    return;
+                }
                 var changes = Dijkstra.GetObserverForGraph(graph,
                     graph.Nodes.First().Id,graph.Nodes.Last().Id);
                 var vis = new Visualizator<string, int, N>(changes, Dijkstra.DefineColor);
@@ -624,11 +650,25 @@ namespace Graph.Int
             {
                 // Kraskal
                 var graph = GraphCreator.GetParsedGraph<State>(update.Message.Text);
+                if (SendIfIncorrectGraphData(update, bot, graph))
+                {
+                    return;
+                }
                 var changes = Krascal.GetObserverForGraph(graph);
                 var vis = new Visualizator<string, int, State>(changes,
                     (state) => ColorTranslator.FromHtml(state.ToString()));
                 CreateGifAndSendToUser(update, bot, vis);
             }
+        }
+
+        private bool SendIfIncorrectGraphData<TState>(Update update, Bot bot, Graph<string, int, TState> graph)
+        {
+            if (graph == null)
+            {
+                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Неверные данные для создания графа");
+                return true;
+            }
+            return false;
         }
 
         private void CreateGifAndSendToUser<TId, TWeight, TState>(Update update, Bot bot, Visualizator<TId, TWeight, TState> vis)

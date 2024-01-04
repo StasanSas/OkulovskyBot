@@ -26,7 +26,7 @@ public class InputDataParser
             var splittedLine = line.Split(":");
             if (splittedLine.Length != 2)
             {
-                throw new ArgumentException("Incorrect separator count");
+                return null;
             }
             var nodeInfo = NodeInfo.Create(splittedLine[0]);
             nodesInfo.Add(nodeInfo);

@@ -8,6 +8,10 @@ public static class GraphCreator
     {
         var graph = new Graph<string, int, TState>(withObserver);
         var graphData = new InputDataParser(inputGraphInfo).Parse();
+        if (graphData == null)
+        {
+            return null;
+        }
         foreach (var nodeInfo in graphData.NodesInfo)
         {
             graph.Nodes.AddNode(new NodeVisual<string, int, TState>(nodeInfo.Name, nodeInfo.Weight));
