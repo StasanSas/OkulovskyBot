@@ -142,5 +142,20 @@ namespace Graph.Int
                 return connection.QuerySingleOrDefault<Reactions>(selectQuery, new { Id = id });
             }
         }
+
+        public void UpdateReactions(int implementationId, int likes, int dislikes)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var updateQuery = @"
+            UPDATE ReactionsDDD
+            SET Likes = @Likes, Dislikes = @Dislikes
+            WHERE Id = @ImplementationId";
+
+                connection.Execute(updateQuery, new { ImplementationId = implementationId, Likes = likes, Dislikes = dislikes });
+            }
+        }
     }
 }
