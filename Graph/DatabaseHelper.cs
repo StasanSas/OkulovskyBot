@@ -157,5 +157,41 @@ namespace Graph.Int
                 connection.Execute(updateQuery, new { ImplementationId = implementationId, Likes = likes, Dislikes = dislikes });
             }
         }
+
+        public void UpdateBuilderImplementation(BuilderImplementation builderImplementation)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var updateQuery = @"
+                    UPDATE BuilderImplementationDDD
+                    SET TypeImplementation = @TypeImplementation,
+                        Name = @Name,
+                        Author = @Author,
+                        Description = @Description,
+                        Code = @Code
+                    WHERE Id = @Id";
+
+                connection.Execute(updateQuery, builderImplementation);
+            }
+        }
+
+        public void DeleteBuilderImplementation(int id)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var deleteQuery = @"
+                    DELETE FROM BuilderImplementationDDD
+                    WHERE Id = @Id;
+
+                    DELETE FROM ReactionsDDD
+                    Where Id = @Id";
+
+                connection.Execute(deleteQuery, new { Id = id });
+            }
+        }
     }
 }
