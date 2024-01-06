@@ -63,11 +63,12 @@ namespace Graph.App
             var counterAttemptsVisualize = 0;
             while (counterAttemptsVisualize < 100)
             {
-                TryVisualize(delay, outputPath);
+                if (TryVisualize(delay, outputPath))
+                    break;
             }
         }
 
-        public void TryVisualize(int delay, string outputPath)
+        public bool TryVisualize(int delay, string outputPath)
         {
             using (var magickImages = new MagickImageCollection())
             {
@@ -80,7 +81,7 @@ namespace Graph.App
                         if (change.TypeChange == TypeChange.CreateNode && counterAttemptsPutNode > 1000)
                         {
                             counterAttemptsPutNode = 0;
-                            return;
+                            return false;
                         }                   
 
                         var pictureStep = DrawGraph(changeOnlyOnThisStep, bmp);
@@ -95,6 +96,7 @@ namespace Graph.App
                 }
                 // Сохранение гифки
                 magickImages.Write(outputPath);
+                return true;
             }
         }
 
