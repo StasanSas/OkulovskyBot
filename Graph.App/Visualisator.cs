@@ -80,6 +80,9 @@ namespace Graph.App
 
                         if (change.TypeChange == TypeChange.CreateNode && counterAttemptsPutNode > 1000)
                         {
+                            visualizedGraph = new Graph<TId, TWeight, TState>();
+                            dataNodeVisual = new Dictionary<NodeVisual<TId, TWeight, TState>, NodeVisualData>();
+                            dataEdgeVisual = new Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData>();
                             counterAttemptsPutNode = 0;
                             return false;
                         }                   
