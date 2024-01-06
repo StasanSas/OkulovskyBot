@@ -47,18 +47,25 @@ public class InputDataParser
             string stringIncidentNodesData)
         {
             var edgeInfos = new List<EdgeInfo>();
-            var match = Regex.Match(stringIncidentNodesData, FullEdgeInfoPattern);
-            if (!match.Success)
+            var stringMatches = SplitFullEdgePattern(stringIncidentNodesData);
+            foreach (var elem in stringMatches)
             {
-                match = Regex.Match(stringIncidentNodesData, EdgeInfoPattern);
-            }
-            var groupsCount = match.Groups.Count;
-            for (var i = 1; i < groupsCount; i++)
-            {
-                edgeInfos.Add(EdgeInfo.Create(startNode, match.Groups[i].ToString()));
+                edgeInfos.Add(EdgeInfo.Create(startNode, elem));
             }
             return new EdgesInfo(edgeInfos);
         }
+    }
+
+    private static List<string> SplitFullEdgePattern(string input)
+    {
+        var res = new List<string>();
+        string pattern = @"(\d+)\s*[eE]\s*(\d+)";
+        MatchCollection matches = Regex.Matches(input, pattern);
+        foreach (Match match in matches)
+        {
+            res.Add(match.ToString());
+        }
+        return res;
     }
     
     public record EdgeInfo(string FirstNodeName, string SecondNodeName, int Weight)
