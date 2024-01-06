@@ -48,12 +48,28 @@ public class InputDataParser
         {
             var edgeInfos = new List<EdgeInfo>();
             var stringMatches = SplitFullEdgePattern(stringIncidentNodesData);
+            if (stringMatches.Count == 0)
+            {
+                stringMatches = SplitEdgePattern(" " + stringIncidentNodesData);
+            }
             foreach (var elem in stringMatches)
             {
                 edgeInfos.Add(EdgeInfo.Create(startNode, elem));
             }
             return new EdgesInfo(edgeInfos);
         }
+    }
+    
+    private static List<string> SplitEdgePattern(string input)
+    {
+        var res = new List<string>();
+        string pattern = @"\s+(\d+)";
+        MatchCollection matches = Regex.Matches(input, pattern);
+        foreach (Match match in matches)
+        {
+            res.Add(match.ToString());
+        }
+        return res;
     }
 
     private static List<string> SplitFullEdgePattern(string input)
