@@ -20,6 +20,7 @@ namespace Graph.App
         int size;
         Func<TState, Color> parserColor;
         Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>> processingByType;
+        private AntiStaticVisualData _antiStaticVisualData;
 
 
         public Visualizator(List<Change<List<TId>, TWeight, TState>> changes, Func<TState, Color> parserColor)
@@ -49,15 +50,15 @@ namespace Graph.App
                 [TypeChange.UnidentifiedNode] = GetNode,
                 [TypeChange.UnidentifiedEdge] = GetEdge,
             };
+            _antiStaticVisualData = new AntiStaticVisualData();
         }
 
         public void StartVisualize(int delay, string outputPath)
         {
-
             var counterObject = GetCounterObjectInGraph(changes);
             size = (int)(200 * Math.Sqrt(counterObject));
-            NodeVisualData.Radius = (size / (counterObject)) + 1;
-            EdgeVisualData.Weight = (size / (10 * counterObject)) + 1;
+            _antiStaticVisualData.NodeRadius = (size / (counterObject)) + 1;
+            _antiStaticVisualData.EdgeWidth = (size / (10 * counterObject)) + 1;
             using (var magickImages = new MagickImageCollection())
             {
                 foreach (var change in changes)
@@ -164,22 +165,23 @@ namespace Graph.App
         {
             var newNode = new NodeVisual<TId, TWeight, TState>(change.Id[0], change.Weight, change.State);
             Random rnd = new Random();
-            if (NodeVisualData.isFirstNode)
+            var r = _antiStaticVisualData.NodeRadius;
+            if (_antiStaticVisualData.WaitFirstNode)
             {
-                var randomX = rnd.Next(0 + 2 * NodeVisualData.Radius + 1, (size / 2) - NodeVisualData.Radius);
-                var randomY = rnd.Next(0 + 2 * NodeVisualData.Radius + 1, (size / 2) - NodeVisualData.Radius);
+                var randomX = rnd.Next(0 + 2 * r + 1, (size / 2) - r);
+                var randomY = rnd.Next(0 + 2 * r + 1, (size / 2) - r);
                 dataNodeVisual.Add(newNode, new NodeVisualData(randomX, randomY));
                 visualizedGraph.Nodes.AddNode(newNode);
-                NodeVisualData.isFirstNode = false;
+                _antiStaticVisualData.WaitFirstNode = false;
                 return null;
             }
-            var distanceMin = 4 * NodeVisualData.Radius;
-            var distanceMax = 6 * NodeVisualData.Radius;
+            var distanceMin = 4 * r;
+            var distanceMax = 6 * r;
             double maxAmountEdgeIntersections = 0;
             while (true)
             {
-                var randomX = rnd.Next(0 + 2 * NodeVisualData.Radius, size - NodeVisualData.Radius);
-                var randomY = rnd.Next(0 + 2 * NodeVisualData.Radius, size - NodeVisualData.Radius);
+                var randomX = rnd.Next(0 + 2 * r, size - r);
+                var randomY = rnd.Next(0 + 2 * r, size - r);
                 if (!IsInCorrectDistanceFromNodes(randomX, randomY, distanceMin, distanceMax))
                 {
                     distanceMax += 1;
@@ -218,7 +220,7 @@ namespace Graph.App
         public bool IsInsertNodeIfConnectWithOtherNode(int x, int y)
         {
 
-            var r = 2 * NodeVisualData.Radius;
+            var r = 2 * _antiStaticVisualData.NodeRadius;
             foreach (var node in visualizedGraph.Nodes)
             {
                 var pointCurrNode = dataNodeVisual[node];
@@ -238,7 +240,7 @@ namespace Graph.App
 
         public int AmountInsertEdgeIfConnectWithOtherNode(int x, int y)
         {
-            var r = 2 * NodeVisualData.Radius;
+            var r = 2 * _antiStaticVisualData.NodeRadius;
             var counter = 0;
             foreach (var node in visualizedGraph.Nodes)
             {
@@ -272,16 +274,17 @@ namespace Graph.App
         public void DrawEdge(EdgeVisual<TId, TWeight, TState> edge, IPartGraph changeOnlyOnThisStep, Graphics g)
         {
             Pen pen;
+            var edgeWidth = _antiStaticVisualData.EdgeWidth;
             if (edge == changeOnlyOnThisStep)
-                pen = new Pen(parserColor(edge.State), EdgeVisualData.Weight * 3);
+                pen = new Pen(parserColor(edge.State), edgeWidth * 3);
             else
-                pen = new Pen(parserColor(edge.State), EdgeVisualData.Weight);
+                pen = new Pen(parserColor(edge.State), edgeWidth);
             g.DrawLine(pen, dataEdgeVisual[edge].Start.X, dataEdgeVisual[edge].Start.Y,
                        dataEdgeVisual[edge].End.X, dataEdgeVisual[edge].End.Y);
             var xLetter = (dataEdgeVisual[edge].Start.X + dataEdgeVisual[edge].End.X) / 2;
             var yLetter = (dataEdgeVisual[edge].Start.Y + dataEdgeVisual[edge].End.Y) / 2;
 
-            Font drawFont = new Font("Arial", EdgeVisualData.Weight * 3);
+            Font drawFont = new Font("Arial", edgeWidth * 3);
             SolidBrush drawBrush = new SolidBrush(Color.BlueViolet);
 
             // Рисуем цифру 5 в координатах (10, 10) на изображении
@@ -293,13 +296,13 @@ namespace Graph.App
             SolidBrush brush = new SolidBrush(parserColor(node.State));
             int size;
             if (node == changeOnlyOnThisStep)
-                size = (int)(1.5 * NodeVisualData.Radius);
+                size = (int)(1.5 * _antiStaticVisualData.NodeRadius);
             else
-                size = NodeVisualData.Radius;
+                size = _antiStaticVisualData.NodeRadius;
             brush.Color = parserColor(node.State);
             var pointNode = dataNodeVisual[node];
             g.FillEllipse(brush, pointNode.X - size, pointNode.Y - size, 2 * size, 2 * size);
-            Font drawFont = new Font("Arial", EdgeVisualData.Weight * 3);
+            Font drawFont = new Font("Arial", _antiStaticVisualData.EdgeWidth * 3);
             SolidBrush drawBrush = new SolidBrush(Color.BlueViolet);
 
             // Рисуем цифру 5 в координатах (10, 10) на изображении

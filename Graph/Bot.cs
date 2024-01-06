@@ -782,7 +782,7 @@ namespace Graph.Int
             pointerToSubstate++;
         }
 
-        private void  GetAdjacencyLists(Update update, Bot bot)
+        private void GetAdjacencyLists(Update update, Bot bot)
         {
             if (update.Message.Text == null)
                 return;
