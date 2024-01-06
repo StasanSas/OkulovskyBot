@@ -21,6 +21,7 @@ namespace Graph.App
         Func<TState, Color> parserColor;
         Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>> processingByType;
         private AntiStaticVisualData _antiStaticVisualData;
+        private int counterAttemptsPutNode = 0;
 
 
         public Visualizator(List<Change<List<TId>, TWeight, TState>> changes, Func<TState, Color> parserColor)
@@ -59,21 +60,38 @@ namespace Graph.App
             size = (int)(200 * Math.Sqrt(counterObject));
             _antiStaticVisualData.NodeRadius = (size / (counterObject)) + 1;
             _antiStaticVisualData.EdgeWidth = (size / (10 * counterObject)) + 1;
+            var counterAttemptsVisualize = 0;
+            while (counterAttemptsVisualize < 100)
+            {
+                TryVisualize(delay, outputPath);
+            }
+        }
+
+        public void TryVisualize(int delay, string outputPath)
+        {
             using (var magickImages = new MagickImageCollection())
             {
                 foreach (var change in changes)
                 {
-                    var bmp = new Bitmap(size, size);
-                    IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
-                    var pictureStep = DrawGraph(changeOnlyOnThisStep, bmp);
+                    using (var bmp = new Bitmap(size, size))
+                    {
+                        IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
 
-                    ImageConverter converter = new ImageConverter();
-                    byte[] imageBytes = (byte[])converter.ConvertTo(pictureStep, typeof(byte[]));
+                        if (change.TypeChange == TypeChange.CreateNode && counterAttemptsPutNode > 1000)
+                        {
+                            counterAttemptsPutNode = 0;
+                            return;
+                        }                   
 
-                    var magickImage = new MagickImage(imageBytes);
-                    magickImage.AnimationDelay = delay;
-                    magickImages.Add(magickImage);
-                    bmp.Dispose();
+                        var pictureStep = DrawGraph(changeOnlyOnThisStep, bmp);
+
+                        ImageConverter converter = new ImageConverter();
+                        byte[] imageBytes = (byte[])converter.ConvertTo(pictureStep, typeof(byte[]));
+
+                        var magickImage = new MagickImage(imageBytes);
+                        magickImage.AnimationDelay = delay;
+                        magickImages.Add(magickImage);
+                    }
                 }
                 // Сохранение гифки
                 magickImages.Write(outputPath);
@@ -87,9 +105,9 @@ namespace Graph.App
             foreach (var change in changes)
             {
                 if (change.TypeChange == TypeChange.CreateNode)
-                    counterObject += 1;
+                    counterObject += 2;
                 if (change.TypeChange == TypeChange.RemoveNode)
-                    counterObject -= 1;
+                    counterObject -= 2;
                 if (change.TypeChange == TypeChange.CreateEdge)
                     counterObject += 3;
                 if (change.TypeChange == TypeChange.RemoveEdge)
@@ -166,6 +184,9 @@ namespace Graph.App
             var newNode = new NodeVisual<TId, TWeight, TState>(change.Id[0], change.Weight, change.State);
             Random rnd = new Random();
             var r = _antiStaticVisualData.NodeRadius;
+
+            counterAttemptsPutNode = 0;
+
             if (_antiStaticVisualData.WaitFirstNode)
             {
                 var randomX = rnd.Next(0 + 2 * r + 1, (size / 2) - r);
@@ -176,22 +197,27 @@ namespace Graph.App
                 return null;
             }
             var distanceMin = 4 * r;
-            var distanceMax = 6 * r;
+            var distanceMax = 8 * r;
             double maxAmountEdgeIntersections = 0;
             while (true)
             {
+                if (counterAttemptsPutNode > 1000)
+                    return null;
                 var randomX = rnd.Next(0 + 2 * r, size - r);
                 var randomY = rnd.Next(0 + 2 * r, size - r);
+                counterAttemptsPutNode += 1;
                 if (!IsInCorrectDistanceFromNodes(randomX, randomY, distanceMin, distanceMax))
                 {
                     distanceMax += 1;
                     continue;
                 }
                 if (IsInsertNodeIfConnectWithOtherNode(randomX, randomY))
+                {
+                    distanceMax += 1;
                     continue;
+                }
                 if (AmountInsertEdgeIfConnectWithOtherNode(randomX, randomY) > maxAmountEdgeIntersections)
                 {
-                    Console.WriteLine(maxAmountEdgeIntersections);
                     maxAmountEdgeIntersections += 0.1;
                     continue;
                 }
