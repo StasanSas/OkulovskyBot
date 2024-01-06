@@ -834,7 +834,16 @@ namespace Graph.Int
                 System.IO.File.Delete(path);
             }
             System.IO.File.Create(path).Close();
-            vis.StartVisualize(25, path);
+            try
+            {
+                vis.StartVisualize(25, path);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Неверные данные для создания графа");
+                return;
+            }
+            
             using Stream stream = System.IO.File.OpenRead(path);
             await bot.botTelegram.SendAnimationAsync(
                 chatId: update.Message.Chat.Id,

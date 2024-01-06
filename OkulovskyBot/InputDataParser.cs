@@ -29,6 +29,10 @@ public class InputDataParser
                 return null;
             }
             var nodeInfo = NodeInfo.Create(splittedLine[0]);
+            if (nodeInfo == null)
+            {
+                return null;
+            }
             nodesInfo.Add(nodeInfo);
             edgesInfo.AddRange(EdgesInfo.Create(nodeInfo.Name, splittedLine[1]).EdgeInfos);
         }
@@ -119,7 +123,7 @@ public class InputDataParser
             }
             if (!match.Success)
             {
-                throw new ArgumentException("Incorrect input for node name or weight");
+                return null;
             }
             var nodeId = match.Groups[1].ToString();
             int nodeWeight = match.Groups.Count < 3 ?
