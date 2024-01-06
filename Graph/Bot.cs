@@ -825,7 +825,7 @@ namespace Graph.Int
             return false;
         }
 
-        private void CreateGifAndSendToUser<TId, TWeight, TState>(Update update, Bot bot, Visualizator<TId, TWeight, TState> vis)
+        private async void CreateGifAndSendToUser<TId, TWeight, TState>(Update update, Bot bot, Visualizator<TId, TWeight, TState> vis)
         {
             var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
             var path = Path.Combine(projectDirectory, "Gifs\\" + update.Message.Chat.Id.GetHashCode() + ".gif");
@@ -836,9 +836,10 @@ namespace Graph.Int
             System.IO.File.Create(path).Close();
             vis.StartVisualize(25, path);
             using Stream stream = System.IO.File.OpenRead(path);
-            bot.botTelegram.SendAnimationAsync(
+            await bot.botTelegram.SendAnimationAsync(
                 chatId: update.Message.Chat.Id,
                 animation: new InputFileStream(stream, fileName: path));
+            await Task.Delay(1000);
         }
 
         public void Process(Update update, Bot bot)
