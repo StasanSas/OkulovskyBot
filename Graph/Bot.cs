@@ -382,7 +382,7 @@ namespace Graph.Int
             pointerToSubstate = 0;
         }
 
-        public void AddType(Update update, Bot bot, BuilderImplementation builder)
+        public async void AddType(Update update, Bot bot, BuilderImplementation builder)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "Необходимо ввести тип реализации!"))
                 return;
@@ -395,38 +395,38 @@ namespace Graph.Int
             };
             if (!dict.ContainsKey(update.CallbackQuery.Data))
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Нажмите кнопку с предложенным вариантом");
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Нажмите кнопку с предложенным вариантом");
                 return;
             }
             builder.typeImplementation = dict[update.CallbackQuery.Data];
-            bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Введите название Вашей реализации:");
+            await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id, "Введите название Вашей реализации:");
             pointerToSubstate++;
         }
 
-        public void AddName(Update update, Bot bot, BuilderImplementation builder)
+        public async void AddName(Update update, Bot bot, BuilderImplementation builder)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название реализации!"))
                 return;
             builder.Name = update.Message.Text;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите описание Вашей реализации:");
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите описание Вашей реализации:");
             pointerToSubstate++;
         }
 
-        public void AddDescription(Update update, Bot bot, BuilderImplementation builder)
+        public async void AddDescription(Update update, Bot bot, BuilderImplementation builder)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести описание реализации!"))
                 return;
             builder.Description = update.Message.Text;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Отправьте ответным сообщением код Вашей реализации на C#");
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Отправьте ответным сообщением код Вашей реализации на C#");
             pointerToSubstate++;
         }
 
-        public void AddCode(Update update, Bot bot, BuilderImplementation builder)
+        public async void AddCode(Update update, Bot bot, BuilderImplementation builder)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести код реализации!"))
                 return;
             builder.Code = update.Message.Text;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Согласны добавить реализацию?", replyMarkup: GetInlineButton());
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Согласны добавить реализацию?", replyMarkup: GetInlineButton());
             pointerToSubstate++;
         }
 
@@ -435,13 +435,13 @@ namespace Graph.Int
             return new InlineKeyboardMarkup(new[] { new[] { InlineKeyboardButton.WithCallbackData("Подтвердить") } });
         }
 
-        public void AddInDataBase(Update update, Bot bot, BuilderImplementation builder)
+        public async void AddInDataBase(Update update, Bot bot, BuilderImplementation builder)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "AAA"))
                 return;
             if (update.CallbackQuery.Data == "Подтвердить")
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Отлично! Реализация принята и успешно загружена.\n\nБлагодарим Вас за пополнение базы! Спасибо, что помогаете другим в изучении C# ♥", replyMarkup: Infrastructure.GetMenuButtons());
                 var authorName = $"{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.LastName}";
                 builder.Author = authorName;
@@ -476,7 +476,7 @@ namespace Graph.Int
             pointerToSubstate = 0;
         }
 
-        public void GetImplementationsFromDatabase(Update update, Bot bot)
+        public async void GetImplementationsFromDatabase(Update update, Bot bot)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести название реализации"))
                 return;
@@ -486,7 +486,7 @@ namespace Graph.Int
 
             if (implementations.Count == 0)
             {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Не удалось найти реализации по указанному названию...");
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Не удалось найти реализации по указанному названию...");
                 return;
             }
 
@@ -501,7 +501,7 @@ namespace Graph.Int
 
             message.AppendLine("\nВ ответном сообщении напишите порядковый номер, и я поделюсь всей информацией по данной реализации!");
 
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
 
             pointerToSubstate++;
         }
@@ -520,74 +520,74 @@ namespace Graph.Int
                 new[] { new[] { InlineKeyboardButton.WithCallbackData("Next variant")}});
         }
 
-        public void RepresentImplementation(Update update, Bot bot)
+        public async void RepresentImplementation(Update update, Bot bot)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести порядковый номер"))
                 return;
             number = int.Parse(update.Message.Text);
             var implementation = implementations[number - 1];
             var reactions = bot.data.GetReactionsById(implementation.Id);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"{implementation.Name}\n\nАвтор: {implementation.Author}\n\n{implementation.Description}");
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"```\n{implementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetReactionButtons(reactions));
             pointerToSubstate++;
         }
 
-        public void MaintainButtonReactions(Update update, Bot bot)
+        public async void MaintainButtonReactions(Update update, Bot bot)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "AAA"))
                 return;
             var message = update.CallbackQuery.Data;
             if (message.Contains("dislikes"))
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Введите любую фразу, если действительно хотите поставить данную оценку.");
                 pointerToSubstate += 3;
             }
             else if (message.Contains("likes"))
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Введите любую фразу, если действительно хотите поставить данную оценку.");
                 pointerToSubstate += 2;
             }
             if (message == "Next variant")
             {
                 number++;
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Уверены, что желаете перейти к следующей реализации? Введите любую фразу, иначе - нажмите \"Назад\" в меню!");
                 pointerToSubstate++;
             }
         }
 
-        public void RepresentImplementationWithDefiniteNumber(Update update, Bot bot)
+        public async void RepresentImplementationWithDefiniteNumber(Update update, Bot bot)
         {
             if (number == implementations.Count + 1)
                 number = 1;
             var implementation = implementations[number - 1];
             var reactions = bot.data.GetReactionsById(implementation.Id);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"{implementation.Name}\n\nАвтор: {implementation.Author}\n\n{implementation.Description}");
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"```\n{implementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetReactionButtons(reactions));
             pointerToSubstate--;
         }
 
-        public void UpdateImplementationLike(Update update, Bot bot)
+        public async void UpdateImplementationLike(Update update, Bot bot)
         {
             var currentImplementation = implementations[number - 1];
             var reactions = bot.data.GetReactionsById(currentImplementation.Id);
             bot.data.UpdateReactions(currentImplementation.Id, reactions.Likes + 1, reactions.Dislikes);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Оценка выставлена успешно", replyMarkup: GetNextButton());
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Оценка выставлена успешно", replyMarkup: GetNextButton());
             pointerToSubstate -= 2;
         }
 
-        public void UpdateImplementationDisLike(Update update, Bot bot)
+        public async void UpdateImplementationDisLike(Update update, Bot bot)
         {
             var currentImplementation = implementations[number - 1];
             var reactions = bot.data.GetReactionsById(currentImplementation.Id);
             bot.data.UpdateReactions(currentImplementation.Id, reactions.Likes, reactions.Dislikes + 1);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Оценка выставлена успешно", replyMarkup: GetNextButton());
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Оценка выставлена успешно", replyMarkup: GetNextButton());
             pointerToSubstate -= 3;
         }
 
@@ -616,13 +616,13 @@ namespace Graph.Int
             pointerToSubstate = 0;
         }
 
-        public void GetMyImplementations(Update update, Bot bot)
+        public async void GetMyImplementations(Update update, Bot bot)
         {
             implementations = bot.data.GetMyImplementations($"{update.Message.From.FirstName} {update.Message.From.LastName}");
 
             if (implementations.Count == 0)
             {
-                bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вы не сохранили ещё ни одной реализации!");
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Вы не сохранили ещё ни одной реализации!");
                 return;
             }
 
@@ -635,9 +635,9 @@ namespace Graph.Int
                 message.AppendLine($"{i + 1}. {implementation.Name}");
             }
 
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, message.ToString());
 
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите порядковый номер реализации");
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id, "Введите порядковый номер реализации");
             pointerToSubstate++;
         }
 
@@ -649,84 +649,84 @@ namespace Graph.Int
                 InlineKeyboardButton.WithCallbackData("Вернуться к списку реализаций")}});
         }
 
-        public void ShowDefiniteImplementation(Update update, Bot bot)
+        public async void ShowDefiniteImplementation(Update update, Bot bot)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.Message, "Необходимо ввести порядковый номер"))
                 return;
             var number = int.Parse(update.Message.Text);
             currentImplementation = implementations[number - 1];
             var reactions = bot.data.GetReactionsById(currentImplementation.Id);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"{currentImplementation.Name}\n\n{reactions.Likes} Нравится | {reactions.Dislikes} Не нравится\n\n{currentImplementation.Description}");
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"```\n{currentImplementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetChangeButtons());
             pointerToSubstate++;
         }
 
-        public void MaintainImplementationButtons(Update update, Bot bot)
+        public async void MaintainImplementationButtons(Update update, Bot bot)
         {
             if (this.ProcessingWrongMessage(update, bot, UpdateType.CallbackQuery, "AAA"))
                 return;
             var message = update.CallbackQuery.Data;
             if (message == "Изменить")
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Введите новое название реализации. Если желаете пропустить данный шаг, введите прочерк -");
                 pointerToSubstate += 2;
             }
             else if (message == "Удалить")
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Вы уверены, что хотите удалить реализацию из базы без возможности восстановления? Введите любую фразу в качестве подтверждения.");
                 pointerToSubstate++;
             }
             else if (message == "Вернуться к списку реализаций")
             {
-                bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
+                await bot.botTelegram.SendTextMessageAsync(update.CallbackQuery.From.Id,
                     "Чтобы вернуться к списку Ваших реализаций, введите любую фразу.");
                 pointerToSubstate -= 2;
             }
         }
 
-        public void Delete(Update update, Bot bot)
+        public async void Delete(Update update, Bot bot)
         {
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                     "Реализация успешно удалена без возможности восстановления.");
             bot.data.DeleteImplementation(currentImplementation.Id);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                     "Чтобы вернуться к списку Ваших реализаций, введите любую фразу.");
             pointerToSubstate -= 3;
         }
 
-        public void ChangeFirstStep(Update update, Bot bot)
+        public async void ChangeFirstStep(Update update, Bot bot)
         {
             var newName = update.Message.Text;
             if (newName != "-")
                 currentImplementation.Name = newName;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                     "Введите новое описание реализации. Если желаете пропустить данный шаг, введите прочерк -");
             pointerToSubstate++;
         }
 
-        public void ChangeSecondStep(Update update, Bot bot)
+        public async void ChangeSecondStep(Update update, Bot bot)
         {
             var newDescription = update.Message.Text;
             if (newDescription != "-")
                 currentImplementation.Description = newDescription;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                     "Обновите код реализации. Если желаете пропустить данный шаг, введите прочерк -");
             pointerToSubstate++;
         }
 
-        public void ChangeThirdStep(Update update, Bot bot)
+        public async void ChangeThirdStep(Update update, Bot bot)
         {
             var newCode = update.Message.Text;
             if (newCode != "-")
                 currentImplementation.Code = newCode;
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                    "Реализация успешно обновлена!\n\nСпасибо, что пользуетесь нашим ботом!");
             bot.data.UpdateImplementation(currentImplementation);
-            bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                     "Чтобы вернуться к списку Ваших реализаций, введите любую фразу.");
             pointerToSubstate -= 6;
         }
