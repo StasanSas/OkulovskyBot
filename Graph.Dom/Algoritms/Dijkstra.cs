@@ -25,7 +25,7 @@ namespace Graph.Dom.Algoritms
             switch (elem)
             {
                 case N.None : return Color.FloralWhite;
-                case N.Track : return Color.Crimson;
+                case N.Track : return Color.Red;
                 default: return Color.White;
             }
         }
@@ -35,6 +35,7 @@ namespace Graph.Dom.Algoritms
             var notVisited = graph.Nodes.ToList();
             var track = new Dictionary<NodeVisual<string, int, N>, NodeVisual<string, int, N>>();
             track[graph.Nodes[start]] = null;
+            graph.Nodes[start].State = N.Track;
 
             while (true)
             {
@@ -71,16 +72,16 @@ namespace Graph.Dom.Algoritms
             var endNode = graph.Nodes[end];
             while (endNode != null)
             {
-                result.Add(endNode);
-                endNode = track[endNode];
                 endNode.GetSignal(TypeChange.UnidentifiedNode);
+                result.Add(endNode);
+                endNode = track[endNode];               
             }
             result.Reverse();
             return graph;
         }
 
         public static List<Change<List<string>, int, N>> GetObserverForGraph(Graph<string, int, N> graph, string start, string end)
-        {
+        {           
             return Algoritm(graph, start, end).GetChanges();
         }
     }

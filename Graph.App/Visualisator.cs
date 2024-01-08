@@ -4,6 +4,8 @@ using ImageMagick;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +24,7 @@ namespace Graph.App
         Dictionary<TypeChange, Func<Change<List<TId>, TWeight, TState>, IPartGraph?>> processingByType;
         private AntiStaticVisualData _antiStaticVisualData;
         private int counterAttemptsPutNode = 0;
+        int c = 0;
 
 
         public Visualizator(List<Change<List<TId>, TWeight, TState>> changes, Func<TState, Color> parserColor)
@@ -57,8 +60,8 @@ namespace Graph.App
         public void StartVisualize(int delay, string outputPath)
         {
             var counterObject = GetCounterObjectInGraph(changes);
-            size = (int)(200 * Math.Sqrt(counterObject));
-            _antiStaticVisualData.NodeRadius = (size / (counterObject)) + 1;
+            size = (int)(1000 * Math.Sqrt(counterObject));
+            _antiStaticVisualData.NodeRadius = (size / (counterObject + 1)) + 1;
             _antiStaticVisualData.EdgeWidth = (size / (10 * counterObject)) + 1;
             var counterAttemptsVisualize = 0;
             while (counterAttemptsVisualize < 100)
@@ -74,31 +77,37 @@ namespace Graph.App
             {
                 foreach (var change in changes)
                 {
+                    
+                    IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
+
+                    if (change.TypeChange == TypeChange.CreateNode && counterAttemptsPutNode > 10000)
+                    {
+                        visualizedGraph = new Graph<TId, TWeight, TState>();
+                        dataNodeVisual = new Dictionary<NodeVisual<TId, TWeight, TState>, NodeVisualData>();
+                        dataEdgeVisual = new Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData>();
+                        _antiStaticVisualData.WaitFirstNode = true;
+                        counterAttemptsPutNode = 0;
+                        return false;
+                    }
+
                     using (var bmp = new Bitmap(size, size))
                     {
-                        IPartGraph? changeOnlyOnThisStep = AddChangeInGraph(change);
-
-                        if (change.TypeChange == TypeChange.CreateNode && counterAttemptsPutNode > 1000)
-                        {
-                            visualizedGraph = new Graph<TId, TWeight, TState>();
-                            dataNodeVisual = new Dictionary<NodeVisual<TId, TWeight, TState>, NodeVisualData>();
-                            dataEdgeVisual = new Dictionary<EdgeVisual<TId, TWeight, TState>, EdgeVisualData>();
-                            counterAttemptsPutNode = 0;
-                            return false;
-                        }                   
-
                         var pictureStep = DrawGraph(changeOnlyOnThisStep, bmp);
 
-                        ImageConverter converter = new ImageConverter();
-                        byte[] imageBytes = (byte[])converter.ConvertTo(pictureStep, typeof(byte[]));
+                        using (var ms = new MemoryStream())
+                        {
+                            pictureStep.Save(ms, ImageFormat.Jpeg);
+                            ms.Position = 0;
 
-                        var magickImage = new MagickImage(imageBytes);
-                        magickImage.AnimationDelay = delay;
-                        magickImages.Add(magickImage);
+                            var magickImage = new MagickImage(ms);
+                            magickImage.AnimationDelay = delay;
+                            magickImages.Add(magickImage);
+                        }
                     }
                 }
-                // Сохранение гифки
+                magickImages.OptimizeTransparency();
                 magickImages.Write(outputPath);
+
                 return true;
             }
         }
@@ -114,9 +123,9 @@ namespace Graph.App
                 if (change.TypeChange == TypeChange.RemoveNode)
                     counterObject -= 2;
                 if (change.TypeChange == TypeChange.CreateEdge)
-                    counterObject += 3;
+                    counterObject += 1;
                 if (change.TypeChange == TypeChange.RemoveEdge)
-                    counterObject -= 3;
+                    counterObject -= 1;
                 if (maxCounterObject < counterObject)
                     maxCounterObject = counterObject;
             }
@@ -191,11 +200,12 @@ namespace Graph.App
             var r = _antiStaticVisualData.NodeRadius;
 
             counterAttemptsPutNode = 0;
+            var bigRadius = (int)(1.5 * r);
 
             if (_antiStaticVisualData.WaitFirstNode)
-            {
-                var randomX = rnd.Next(0 + 2 * r + 1, (size / 2) - r);
-                var randomY = rnd.Next(0 + 2 * r + 1, (size / 2) - r);
+            {          
+                var randomX = rnd.Next(0 + bigRadius, size - bigRadius);
+                var randomY = rnd.Next(0 + bigRadius, size - bigRadius);
                 dataNodeVisual.Add(newNode, new NodeVisualData(randomX, randomY));
                 visualizedGraph.Nodes.AddNode(newNode);
                 _antiStaticVisualData.WaitFirstNode = false;
@@ -206,19 +216,19 @@ namespace Graph.App
             double maxAmountEdgeIntersections = 0;
             while (true)
             {
-                if (counterAttemptsPutNode > 1000)
+                if (counterAttemptsPutNode > 10000)
                     return null;
-                var randomX = rnd.Next(0 + 2 * r, size - r);
-                var randomY = rnd.Next(0 + 2 * r, size - r);
+                var randomX = rnd.Next(0 + bigRadius, size - bigRadius);
+                var randomY = rnd.Next(0 + bigRadius, size - bigRadius);
                 counterAttemptsPutNode += 1;
                 if (!IsInCorrectDistanceFromNodes(randomX, randomY, distanceMin, distanceMax))
                 {
-                    distanceMax += 1;
+                    distanceMax += (r / 10) + 1;
                     continue;
                 }
                 if (IsInsertNodeIfConnectWithOtherNode(randomX, randomY))
                 {
-                    distanceMax += 1;
+                    distanceMax += (r / 10) + 1;
                     continue;
                 }
                 if (AmountInsertEdgeIfConnectWithOtherNode(randomX, randomY) > maxAmountEdgeIntersections)
@@ -294,22 +304,25 @@ namespace Graph.App
         public Bitmap DrawGraph(IPartGraph changeOnlyOnThisStep, Bitmap bmp)
         {
 
-            var g = Graphics.FromImage(bmp);
-            foreach (var edge in visualizedGraph.Edges)
-                DrawEdge(edge, changeOnlyOnThisStep, g);
-            foreach (var node in visualizedGraph.Nodes)
-                DrawNode(node, changeOnlyOnThisStep, g);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                foreach (var edge in visualizedGraph.Edges)
+                    if (changeOnlyOnThisStep == edge)
+                        DrawEdge(edge, 3 * _antiStaticVisualData.EdgeWidth, g);
+                    else
+                        DrawEdge(edge, _antiStaticVisualData.EdgeWidth, g);
+                foreach (var node in visualizedGraph.Nodes)
+                    if (changeOnlyOnThisStep == node)
+                        DrawNode(node, 1.5f * _antiStaticVisualData.NodeRadius, g);
+                    else
+                        DrawNode(node, _antiStaticVisualData.NodeRadius, g);
+            }
             return bmp;
         }
 
-        public void DrawEdge(EdgeVisual<TId, TWeight, TState> edge, IPartGraph changeOnlyOnThisStep, Graphics g)
+        public void DrawEdge(EdgeVisual<TId, TWeight, TState> edge, float edgeWidth, Graphics g)
         {
-            Pen pen;
-            var edgeWidth = _antiStaticVisualData.EdgeWidth;
-            if (edge == changeOnlyOnThisStep)
-                pen = new Pen(parserColor(edge.State), edgeWidth * 3);
-            else
-                pen = new Pen(parserColor(edge.State), edgeWidth);
+            var pen = new Pen(parserColor(edge.State), edgeWidth);
             g.DrawLine(pen, dataEdgeVisual[edge].Start.X, dataEdgeVisual[edge].Start.Y,
                        dataEdgeVisual[edge].End.X, dataEdgeVisual[edge].End.Y);
             var xLetter = (dataEdgeVisual[edge].Start.X + dataEdgeVisual[edge].End.X) / 2;
@@ -322,14 +335,9 @@ namespace Graph.App
             g.DrawString(edge.Weight.ToString(), drawFont, drawBrush, new PointF(xLetter, yLetter));
         }
 
-        public void DrawNode(NodeVisual<TId, TWeight, TState> node, IPartGraph changeOnlyOnThisStep, Graphics g)
+        public void DrawNode(NodeVisual<TId, TWeight, TState> node, float size, Graphics g)
         {
-            SolidBrush brush = new SolidBrush(parserColor(node.State));
-            int size;
-            if (node == changeOnlyOnThisStep)
-                size = (int)(1.5 * _antiStaticVisualData.NodeRadius);
-            else
-                size = _antiStaticVisualData.NodeRadius;
+            SolidBrush brush = new SolidBrush(parserColor(node.State));  
             brush.Color = parserColor(node.State);
             var pointNode = dataNodeVisual[node];
             g.FillEllipse(brush, pointNode.X - size, pointNode.Y - size, 2 * size, 2 * size);
