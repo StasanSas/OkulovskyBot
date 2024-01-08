@@ -16,6 +16,14 @@ public static class GraphCreator
         {
             graph.Nodes.AddNode(new NodeVisual<string, int, TState>(nodeInfo.Name, nodeInfo.Weight));
         }
+        var writtenNodes = graph.Nodes.Select(x => x.Id).ToHashSet();
+        foreach (var edgeInfo in graphData.EdgesInfo)
+        {
+            if (!writtenNodes.Contains(edgeInfo.SecondNodeName))
+            {
+                graph.Nodes.AddNode(new NodeVisual<string, int, TState>(edgeInfo.SecondNodeName, 0));
+            }
+        }
         foreach (var edgeInfo in graphData.EdgesInfo)
         {
             graph.Edges.AddEdge(graph.Nodes[edgeInfo.FirstNodeName]
