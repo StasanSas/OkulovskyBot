@@ -879,9 +879,10 @@ namespace Graph.Int
                 System.IO.File.Delete(path);
             }
             System.IO.File.Create(path).Close();
+            
             try
             {
-                vis.StartVisualize(50, path);
+                await CreateGifMultithread<TId, TWeight, TState>(vis, path);
             }
             catch (ArgumentOutOfRangeException e)
             {
@@ -900,6 +901,12 @@ namespace Graph.Int
         {
             if (!this.TryProcessMenu(update, bot))
                 substates[pointerToSubstate](update, bot);
+        }
+        
+        private async Task CreateGifMultithread<TId, TWeight, TState>(Visualizator<TId, TWeight, TState> vis, string path)
+        {
+            var task = Task.Factory.StartNew(() => vis.StartVisualize(50, path));
+            await task;
         }
     }
 }
