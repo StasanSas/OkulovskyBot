@@ -810,7 +810,7 @@ namespace Graph.Int
                 }
                 var changes = Krascal.GetObserverForGraph(graph);
                 var vis = new Visualizator<string, int, State>(changes,
-                    (state) => ColorTranslator.FromHtml(state.ToString()));
+                    Krascal.DefineColor);
                 CreateGifAndSendToUser(update, bot, vis);
             }
         }

@@ -71,6 +71,7 @@ namespace Graph.Dom
 
             public void RemoveNode(NodeVisual<TId, TWeight, TState> node)
             {
+                parent.NodesDict[node.Id].Remove();
                 parent.NodesDict.Remove(node.Id);
             }
 
@@ -118,6 +119,8 @@ namespace Graph.Dom
                 var startNode = parent.NodesDict[edge.Start.Id];
                 var endNode = parent.NodesDict[edge.End.Id];
                 var addedEdge = new EdgeVisual<TId, TWeight, TState>(startNode, endNode, edge.Weight, edge.State, parent.observer);
+                startNode.AdjacentEdges.Add(addedEdge);
+                endNode.AdjacentEdges.Add(addedEdge);
                 parent.EdgesDict[IdEdge] = addedEdge;
             }
 
@@ -133,6 +136,7 @@ namespace Graph.Dom
                 var IdEdge = Tuple.Create(edge.Start.Id, edge.End.Id);
                 if (!parent.EdgesDict.ContainsKey(IdEdge))
                     throw new KeyNotFoundException();
+                parent.EdgesDict[IdEdge].Remove();
                 parent.EdgesDict.Remove(IdEdge);
             }
 
