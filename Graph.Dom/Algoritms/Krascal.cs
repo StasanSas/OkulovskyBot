@@ -41,7 +41,8 @@ namespace Graph.Dom.Algoritms
             }
             foreach (var edge in edges.OrderBy(x => x.Weight))
             {
-                tree.Edges.AddEdge(edge);
+                tree.Edges.AddEdge(tree.Nodes[edge.Start.Id]
+                .Connect(tree.Nodes[edge.End.Id], edge.Weight, edge.State));
                 if (Krascal.HasCycle(tree))
                     tree.Edges.RemoveEdge(edge);
                 foreach(var node in tree.Nodes)

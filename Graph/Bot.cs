@@ -279,7 +279,7 @@ namespace Graph.Int
             {
                 ["Найти решение"] = ("Введите название реализации:", new FindState()),
                 ["Добавить решение"] = ("Это настройщик добавляемого решения", new AddState()),
-                ["Визуализировать граф"] = ("Выберите алгоритм для визуализации:\n1. Алгоритм Дейкстры\n2. Алгоритм Краскала", 
+                ["Визуализировать граф"] = ("Выберите алгоритм для визуализации:\n1. Алгоритм Дейкстры\n2. Алгоритм Краскала\n3. Поиск в глубину", 
                 new VisualizeState()),
                 ["Мои реализации"] = ("Чтобы запустить поиск Ваших реализаций в базе, введите любую фразу:", new MyState()),
             };
@@ -743,7 +743,7 @@ namespace Graph.Int
         List<Action<Update, Bot>> substates;
         int pointerToSubstate;
         private int desiredAlgorithm;
-        private static HashSet<int> possibleAlgIndexes = new HashSet<int>() { 1, 2 };
+        private static HashSet<int> possibleAlgIndexes = new HashSet<int>() { 1, 2, 3 };
 
         public VisualizeState()
         {
@@ -813,6 +813,19 @@ namespace Graph.Int
                     Krascal.DefineColor);
                 CreateGifAndSendToUser(update, bot, vis);
             }
+            if (desiredAlgorithm == 3)
+            {
+                // Kraskal
+                var graph = GraphCreator.GetParsedGraph<StateDFS>(update.Message.Text, true);
+                if (SendIfIncorrectGraphData(update, bot, graph))
+                {
+                    return;
+                }
+                var changes = DFS.GetObserverForGraph(graph, graph.Nodes.First());
+                var vis = new Visualizator<string, int, StateDFS>(changes,
+                    DFS.DefineColor);
+                CreateGifAndSendToUser(update, bot, vis);
+            }
         }
 
         private bool SendIfIncorrectGraphData<TState>(Update update, Bot bot, Graph<string, int, TState> graph)
@@ -836,7 +849,7 @@ namespace Graph.Int
             System.IO.File.Create(path).Close();
             try
             {
-                vis.StartVisualize(25, path);
+                vis.StartVisualize(50, path);
             }
             catch (ArgumentOutOfRangeException e)
             {

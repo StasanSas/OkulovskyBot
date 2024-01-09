@@ -119,8 +119,6 @@ namespace Graph.Dom
                 var startNode = parent.NodesDict[edge.Start.Id];
                 var endNode = parent.NodesDict[edge.End.Id];
                 var addedEdge = new EdgeVisual<TId, TWeight, TState>(startNode, endNode, edge.Weight, edge.State, parent.observer);
-                startNode.AdjacentEdges.Add(addedEdge);
-                endNode.AdjacentEdges.Add(addedEdge);
                 parent.EdgesDict[IdEdge] = addedEdge;
             }
 
