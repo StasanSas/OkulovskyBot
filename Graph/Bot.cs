@@ -112,7 +112,6 @@ namespace Graph.Int
         {
             return Name == obj.Name && Id == obj.Id;
         }
-
     }
 
 
@@ -182,6 +181,33 @@ namespace Graph.Int
             botTelegram = new TelegramBotClient(token);
             accountsData = new Dictionary<Account, IStatusBotVisitor>();
             data = new BaseData();
+
+            if (System.IO.File.Exists("accountsData.txt"))
+            {
+                var accountsInfo = System.IO.File.ReadAllLines("accountsData.txt");
+                foreach (var line in accountsInfo)
+                {
+                    var accountInfo = line.Split('%');
+                    var id = long.Parse(accountInfo[1]);
+                    var account = new Account(accountInfo[0], id);
+                    accountsData.Add(account, new BaseState());
+                    this.botTelegram.SendTextMessageAsync(id, "Повторите, пожалуйста, Ваш запрос!", replyMarkup: Infrastructure.GetMenuButtons());
+                }
+            }
+        }
+
+        public bool IsAccountInFile(string str)
+        {
+            if (!System.IO.File.Exists("accountsData.txt"))
+                return false;
+            string fileContents = System.IO.File.ReadAllText("accountsData.txt");
+            return fileContents.Contains(str);
+        }
+
+        public async void UpdateAccountInfo(Account account)
+        {
+            if (!IsAccountInFile($"{account.Name}%{account.Id}"))
+                await System.IO.File.AppendAllLinesAsync("accountsData.txt", new[] { $"{account.Name}%{account.Id}" });
         }
 
 
@@ -205,6 +231,7 @@ namespace Graph.Int
         public void ProcessUpdate(Update update)
         {
             var account = Account.ParseUpdateInAccount(update);
+            UpdateAccountInfo(account);
             if (account == null)
                 return;
 
@@ -529,8 +556,13 @@ namespace Graph.Int
             var reactions = bot.data.GetReactionsById(implementation.Id);
             await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
                 $"{implementation.Name}\n\nАвтор: {implementation.Author}\n\n{implementation.Description}");
-            await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
-                $"```\n{implementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetReactionButtons(reactions));
+            var author = $"{update.Message.From.FirstName} {update.Message.From.LastName}";
+            if (author != implementation.Author)
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+                    $"```\n{implementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetReactionButtons(reactions));
+            else
+                await bot.botTelegram.SendTextMessageAsync(update.Message.Chat.Id,
+                    $"```\n{implementation.Code}\n```", parseMode: ParseMode.MarkdownV2, replyMarkup: GetNextButton());
             pointerToSubstate++;
         }
 
